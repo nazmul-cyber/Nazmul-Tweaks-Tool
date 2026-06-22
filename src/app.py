@@ -16,12 +16,15 @@ from tweaks import (
 )
 from apps import ESSENTIAL_APPS, APP_CATEGORIES, FRESH_APP_IDS
 from executor import (
-    run_batch, run_revert_batch, check_winget, is_admin, relaunch_admin, get_activation_status,
+    run_batch, run_revert_batch, run_revert_all_applied, run_restore_defaults,
+    check_winget, is_admin, relaunch_admin, get_activation_status,
     install_pc_manager, is_pc_manager_installed, open_pc_manager,
     is_windows_desktop_refresh_installed, install_windows_desktop_refresh,
     remove_windows_desktop_refresh, get_system_stats, parse_refresh_stats,
 )
-from session_history import get_last_session, has_last_session
+from session_history import (
+    get_last_session, has_last_session, get_applied_tweak_history, has_applied_tweak_history,
+)
 from animations import animate_progress, fade_page, animate_card_hover, pulse_widget, click_bounce
 from color_log import ColorLog
 from version import APP_VERSION
@@ -63,6 +66,8 @@ class NazmulApp(ctk.CTk):
         self._stats_poll_id = None
         self._wrap_labels: list[tuple[ctk.CTkLabel, float]] = []
         self._resize_job = None
+        self._applied_size = (0, 0)
+        self._applied_wrap_w = 0
 
         ctk.set_appearance_mode(self._theme.ctk_mode)
         self.configure(fg_color=self._theme.bg)
@@ -194,24 +199,34 @@ class NazmulApp(ctk.CTk):
     def _on_root_configure(self, event):
         if event.widget is not self:
             return
+        if event.width < 320 or event.height < 240:
+            return
+        if (event.width, event.height) == self._applied_size:
+            return
         if self._resize_job:
             try:
                 self.after_cancel(self._resize_job)
             except Exception:
                 pass
-        self._resize_job = self.after(60, self._finish_resize)
+        self._resize_job = self.after(250, self._finish_resize)
 
     def _finish_resize(self):
         self._resize_job = None
-        content_w = max(420, self.winfo_width() - 300)
-        for label, ratio in self._wrap_labels:
-            try:
-                label.configure(wraplength=max(160, int(content_w * ratio)))
-            except Exception:
-                pass
-        for scroll in self._page_scrolls.values():
+        size = (self.winfo_width(), self.winfo_height())
+        if size == self._applied_size:
+            return
+        self._applied_size = size
+        content_w = max(420, size[0] - 300)
+        if abs(content_w - self._applied_wrap_w) >= 24:
+            self._applied_wrap_w = content_w
+            for label, ratio in self._wrap_labels:
+                try:
+                    label.configure(wraplength=max(160, int(content_w * ratio)))
+                except Exception:
+                    pass
+        scroll = self._page_scrolls.get(self._page_key)
+        if scroll:
             sync_scroll_frame_width(scroll)
-        self.update_idletasks()
 
     def _setup_boost_menu(self):
         self._boost_popup = None
@@ -506,6 +521,9 @@ class NazmulApp(ctk.CTk):
                       self._t().primary, width=160, height=34).pack(anchor="w", padx=16, pady=(0, 14))
 
         self._build_desktop_menu_offer(body)
+        self._restore_host = ctk.CTkFrame(body, fg_color="transparent")
+        self._restore_host.pack(fill="x", pady=(0, 10))
+        self._build_restore_card(self._restore_host)
 
         cards_data = [
             ("⚙", "Tweaks", f"{len(TWEAKS)} optimizations", "Privacy, speed, debloat", "tweaks", self._t().primary),
@@ -1083,6 +1101,59 @@ class NazmulApp(ctk.CTk):
         if hasattr(self, "_desktop_offer_host") and self._desktop_offer_host.winfo_exists():
             self._build_desktop_menu_offer(self._desktop_offer_host)
 
+    def _build_restore_card(self, parent):
+        for w in parent.winfo_children():
+            w.destroy()
+
+        t = self._t()
+        hist = get_applied_tweak_history()
+        has_last = has_last_session("tweak")
+        count = len(hist)
+
+        card = ctk.CTkFrame(
+            parent, fg_color=t.card, corner_radius=14,
+            border_width=2, border_color=t.warning if count or has_last else t.card_border,
+        )
+        card.pack(fill="x", pady=(0, 10))
+        ctk.CTkLabel(card, text="↩ Restore Previous Settings", font=FONT_HEADING,
+                     text_color=t.text).pack(anchor="w", padx=18, pady=(14, 4))
+
+        if count:
+            status = f"{count} tweak(s) saved on this PC — reopening the app keeps this history."
+        elif has_last:
+            status = "Last tweak batch is saved — you can undo it."
+        else:
+            status = "Applied tweaks before? Use reset to turn services back on."
+
+        status_lbl = ctk.CTkLabel(
+            card, text=status, font=FONT_SMALL, text_color=t.text_muted, justify="left",
+        )
+        status_lbl.pack(anchor="w", padx=18, pady=(0, 8))
+        self._track_wrap(status_lbl, 0.85)
+
+        row = ctk.CTkFrame(card, fg_color="transparent")
+        row.pack(fill="x", padx=14, pady=(0, 14))
+        row.grid_columnconfigure(0, weight=1)
+        row.grid_columnconfigure(1, weight=1)
+        row.grid_columnconfigure(2, weight=1)
+
+        colored_btn(
+            row, "Undo Last Batch", self._revert_last_tweaks, t, t.warning,
+            width=150, height=34,
+        ).grid(row=0, column=0, sticky="ew", padx=4, pady=4)
+        restore_btn = colored_btn(
+            row, "Restore All Recorded", self._revert_all_applied, t, t.primary,
+            width=150, height=34,
+        )
+        restore_btn.grid(row=0, column=1, sticky="ew", padx=4, pady=4)
+        if not count:
+            restore_btn.configure(state="disabled", fg_color=t.btn_secondary, text_color=t.text_muted)
+
+        colored_btn(
+            row, "Reset Services & Defaults", self._restore_defaults, t, t.accent,
+            width=170, height=34,
+        ).grid(row=0, column=2, sticky="ew", padx=4, pady=4)
+
     def _desktop_menu_segment(self, parent, t, *, icon, title, desc, note, note_color,
                               btn_text, btn_color, command, enabled):
         seg = ctk.CTkFrame(
@@ -1414,6 +1485,55 @@ class NazmulApp(ctk.CTk):
             warning = "This will uninstall apps from the last install batch."
         return self._confirm_batch("revert", names, warning)
 
+    def _revert_all_applied(self):
+        if not self._guard():
+            return
+        items = get_applied_tweak_history()
+        if not items:
+            messagebox.showinfo(
+                "Restore",
+                "No tweak history on this PC yet.\n\n"
+                "Apply tweaks first, or use Reset Services & Defaults.",
+            )
+            return
+        if not messagebox.askyesno(
+            "Restore All Recorded",
+            f"Restore {len(items)} tweak(s) this app applied before?\n\n"
+            "Services like SysMain and Windows Search will turn back on.\n"
+            "Settings will return toward Windows defaults.\n\nContinue?",
+            icon="warning",
+        ):
+            return
+        self._busy = True
+        self._show("log")
+        self._log_msg("[INFO] Restoring all recorded tweaks from this PC...")
+        run_revert_all_applied(
+            self._log_msg, on_done=lambda: (setattr(self, "_busy", False), self._refresh_restore_card()),
+        )
+
+    def _restore_defaults(self):
+        if not self._guard():
+            return
+        if not messagebox.askyesno(
+            "Reset Services & Defaults",
+            "Run ALL restore scripts?\n\n"
+            "Turns services back on (SysMain, Windows Search, etc.) and "
+            "reverts privacy/speed tweaks toward Windows defaults.\n\n"
+            "Use this if you tweaked before but history is missing.\n\nContinue?",
+            icon="warning",
+        ):
+            return
+        self._busy = True
+        self._show("log")
+        self._log_msg("[INFO] Resetting services and Windows defaults...")
+        run_restore_defaults(
+            self._log_msg, on_done=lambda: (setattr(self, "_busy", False), self._refresh_restore_card()),
+        )
+
+    def _refresh_restore_card(self):
+        if self._page_key == "home" and getattr(self, "_restore_host", None):
+            self._build_restore_card(self._restore_host)
+
     def _revert_last_tweaks(self):
         if not self._guard():
             return
@@ -1428,7 +1548,9 @@ class NazmulApp(ctk.CTk):
         self._show("log")
         self._log_msg(f"[INFO] Reverting tweak batch from {session.get('timestamp', '?')}...")
         run_revert_batch(
-            items, self._log_msg, on_done=lambda: setattr(self, "_busy", False), kind="tweak",
+            items, self._log_msg,
+            on_done=lambda: (setattr(self, "_busy", False), self._refresh_restore_card()),
+            kind="tweak",
         )
 
     def _revert_last_apps(self):

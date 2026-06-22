@@ -381,6 +381,57 @@ def run_batch(tasks, log, on_done=None, kind="tweak", prtsc_safeguard: bool = Tr
     threading.Thread(target=worker, daemon=True).start()
 
 
+def run_revert_all_applied(log, on_done=None):
+    """Revert every tweak this app ever applied on this PC."""
+    from session_history import get_applied_tweak_history, clear_tweak_history, clear_last_session
+
+    items = get_applied_tweak_history()
+    if not items:
+        log("[INFO] No tweak history saved on this PC yet")
+        if on_done:
+            on_done()
+        return
+
+    def _done():
+        clear_tweak_history()
+        clear_last_session("tweak")
+        if on_done:
+            on_done()
+
+    log(f"[INFO] Restoring {len(items)} recorded tweak(s)...")
+    run_revert_batch(items, log, on_done=_done, kind="tweak")
+
+
+def run_restore_defaults(log, on_done=None):
+    """Run all known undo scripts — services on, settings back (even without history)."""
+    from tweaks import UNDO_SCRIPTS, TWEAKS, NO_UNDO_IDS
+
+    name_map = {t.id: t.name for t in TWEAKS}
+    items = [
+        {"id": tid, "name": name_map.get(tid, tid)}
+        for tid in UNDO_SCRIPTS
+        if tid not in NO_UNDO_IDS
+    ]
+    if not items:
+        log("[INFO] Nothing to restore")
+        if on_done:
+            on_done()
+        return
+
+    def _done():
+        try:
+            from session_history import clear_tweak_history, clear_last_session
+            clear_tweak_history()
+            clear_last_session("tweak")
+        except Exception:
+            pass
+        if on_done:
+            on_done()
+
+    log(f"[INFO] Restoring Windows defaults for {len(items)} item(s)...")
+    run_revert_batch(items, log, on_done=_done, kind="tweak")
+
+
 def run_revert_batch(items, log, on_done=None, kind="tweak"):
     """Undo last tweak batch or uninstall last installed apps."""
     from tweaks import get_undo_script, NO_UNDO_IDS

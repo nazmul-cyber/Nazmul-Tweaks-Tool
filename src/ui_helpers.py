@@ -215,20 +215,13 @@ def sync_scroll_frame_width(scroll_frame) -> None:
 
 
 def make_scroll(parent, theme: Theme, **kw) -> ctk.CTkScrollableFrame:
-    frame = ctk.CTkScrollableFrame(
+    return ctk.CTkScrollableFrame(
         parent,
         fg_color="transparent",
         scrollbar_button_color=theme.primary,
         scrollbar_button_hover_color=theme.primary_hover,
         **kw,
     )
-
-    def _on_configure(event):
-        if event.width > 40:
-            sync_scroll_frame_width(frame)
-
-    frame.bind("<Configure>", _on_configure, add="+")
-    return frame
 
 
 def two_column_grid(parent, pairs):

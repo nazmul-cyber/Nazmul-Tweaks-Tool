@@ -1,0 +1,11 @@
+Restore previous settings + smoother maximize.
+
+**New — Home → Restore Previous Settings**
+- **Undo Last Batch** — revert the most recent tweak apply
+- **Restore All Recorded** — undo every tweak this app applied on this PC (history survives restarts)
+- **Reset Services & Defaults** — turn SysMain, Windows Search, etc. back on even if history is missing
+
+**Fix**
+- Maximize/fullscreen no longer flickers or grows in pixel chunks
+
+Open: `iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/open.ps1)`
