@@ -508,7 +508,7 @@ class NazmulApp(ctk.CTk):
         cmd_box = ctk.CTkFrame(body, fg_color=self._t().card, corner_radius=12,
                                border_width=1, border_color=self._t().card_border)
         cmd_box.pack(fill="x", pady=8)
-        ctk.CTkLabel(cmd_box, text="One-Line Install", font=FONT_HEADING,
+        ctk.CTkLabel(cmd_box, text="One-Click Open (WinUtil style)", font=FONT_HEADING,
                      text_color=self._t().text).pack(anchor="w", padx=18, pady=(14, 4))
         self._install_cmd = get_install_command()
         self._cmd_entry = ctk.CTkEntry(cmd_box, height=36, font=FONT_MONO,
@@ -520,7 +520,7 @@ class NazmulApp(ctk.CTk):
         bf.pack(fill="x", padx=18, pady=(4, 14))
         colored_btn(bf, "Copy", self._copy_install, self._t(), self._t().primary, width=80, height=30).pack(
             side="left", padx=(0, 6))
-        colored_btn(bf, "Run Install", self._run_install, self._t(), self._t().success, width=110, height=30).pack(
+        colored_btn(bf, "Open App", self._run_install, self._t(), self._t().success, width=110, height=30).pack(
             side="left")
 
     def _clickable_card(self, parent, icon, title, badge, desc, nav, color):
@@ -1224,12 +1224,12 @@ class NazmulApp(ctk.CTk):
 
     def _run_install(self):
         self._show("log")
-        self._log_msg("[INFO] Downloading latest EXE from GitHub...")
+        self._log_msg("[INFO] Opening Nazmul Tweaks Tool (WinUtil style)...")
         self._log_msg(f"[INFO] Command: {get_install_command()}")
         ok = launch_public_install()
         if ok:
-            self._toast("Downloading — app will open when ready", self._t().success)
-            self._log_msg("[OK] Download started — Nazmul Tweaks Tool will open")
+            self._toast("Opening app — allow download if first time", self._t().success)
+            self._log_msg("[OK] open.ps1 started — window will appear")
         else:
             script = get_install_script_path()
             if script.exists():

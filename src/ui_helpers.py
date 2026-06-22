@@ -295,28 +295,22 @@ def get_refresh_script_path():
     return get_scripts() / "refresh.ps1"
 
 
-EXE_DOWNLOAD_URL = (
-    "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/"
-    "Nazmul-Tweaks-Tool.exe"
+OPEN_SCRIPT_URL = (
+    "https://raw.githubusercontent.com/nazmul-cyber/"
+    "Nazmul-Tweaks-Tool/main/scripts/open.ps1"
 )
 
 
 def get_install_command() -> str:
-    return (
-        '$d="$env:LOCALAPPDATA\\NazmulTweaksTool";ni $d -Force|Out-Null;'
-        '$e="$d\\Nazmul Tweaks Tool.exe";'
-        f'iwr "{EXE_DOWNLOAD_URL}" -OutFile $e -UseBasicParsing;'
-        "Unblock-File $e -ErrorAction SilentlyContinue;"
-        "Start-Process $e"
-    )
+    return f"iex (iwr -useb {OPEN_SCRIPT_URL})"
 
 
 def launch_public_install() -> bool:
-    """Download latest EXE and open it (no iex, no admin required)."""
+    """Chris Titus style: run open.ps1, app window opens."""
     import subprocess
     import sys
 
-    inner = get_install_command()
+    inner = f"iex (iwr -useb '{OPEN_SCRIPT_URL}')"
     flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
     try:
         subprocess.Popen(

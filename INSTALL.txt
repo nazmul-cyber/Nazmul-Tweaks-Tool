@@ -1,15 +1,11 @@
-NAZMUL TWEAKS TOOL - OPEN THE APP
-==================================
+NAZMUL TWEAKS TOOL - OPEN (Chris Titus style)
+==============================================
 
-Copy ALL 5 lines below into PowerShell, press Enter.
-Software downloads and opens automatically.
+Copy this ONE line into PowerShell, press Enter:
 
-$d="$env:LOCALAPPDATA\NazmulTweaksTool"
-ni $d -ItemType Directory -Force | Out-Null
-$e="$d\Nazmul Tweaks Tool.exe"
-iwr "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe" -OutFile $e -UseBasicParsing
-Unblock-File $e -ErrorAction SilentlyContinue
-Start-Process $e
+iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/open.ps1)
 
-Browser download:
+App window opens. No install folder. No AppData permission issues.
+
+Direct EXE download:
 https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
