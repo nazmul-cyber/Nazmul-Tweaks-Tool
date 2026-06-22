@@ -2,9 +2,10 @@
 
 A beautiful, fast Windows optimization tool inspired by [Chris Titus WinUtil](https://github.com/ChrisTitusTech/winutil). Apply tweaks, install essential apps, and activate Windows/Office — all from one clean UI.
 
-![Theme](https://img.shields.io/badge/Theme-Light%20%26%20Dark-blue)
+![Release](https://img.shields.io/github/v/release/nazmul-cyber/Nazmul-Tweaks-Tool?label=release)
+![Downloads](https://img.shields.io/github/downloads/nazmul-cyber/Nazmul-Tweaks-Tool/total?label=downloads)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6)
-![Python](https://img.shields.io/badge/Python-3.10+-green)
+![Size](https://img.shields.io/badge/EXE-~19%20MB-teal)
 
 ## Features
 
