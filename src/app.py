@@ -24,7 +24,9 @@ from executor import (
 )
 from session_history import (
     get_last_session, has_last_session, get_applied_tweak_history, has_applied_tweak_history,
+    remove_tweaks_from_history,
 )
+from tweaks import get_undo_script, NO_UNDO_IDS
 from animations import animate_progress, fade_page, animate_card_hover, pulse_widget, click_bounce
 from color_log import ColorLog
 from version import APP_VERSION
@@ -62,6 +64,7 @@ class NazmulApp(ctk.CTk):
         self._color_log = None
         self._page_scrolls = {}
         self._fresh_checks = {}
+        self._tweak_back_checks: dict[str, ctk.CTkCheckBox] = {}
         self._resource_bar = None
         self._stats_poll_id = None
         self._wrap_labels: list[tuple[ctk.CTkLabel, float]] = []
@@ -520,10 +523,18 @@ class NazmulApp(ctk.CTk):
         colored_btn(hint_card, "PC Manager", self._pc_manager_action, self._t(),
                       self._t().primary, width=160, height=34).pack(anchor="w", padx=16, pady=(0, 14))
 
-        self._build_desktop_menu_offer(body)
-        self._restore_host = ctk.CTkFrame(body, fg_color="transparent")
-        self._restore_host.pack(fill="x", pady=(0, 10))
-        self._build_restore_card(self._restore_host)
+        split_row = ctk.CTkFrame(body, fg_color="transparent")
+        split_row.pack(fill="x", pady=(0, 10))
+        split_row.grid_columnconfigure(0, weight=2)
+        split_row.grid_columnconfigure(1, weight=3)
+
+        self._tweak_back_host = ctk.CTkFrame(split_row, fg_color="transparent")
+        self._tweak_back_host.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        self._build_tweak_back_panel(self._tweak_back_host)
+
+        self._desktop_menu_host = ctk.CTkFrame(split_row, fg_color="transparent")
+        self._desktop_menu_host.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        self._build_desktop_menu_offer(self._desktop_menu_host)
 
         cards_data = [
             ("⚙", "Tweaks", f"{len(TWEAKS)} optimizations", "Privacy, speed, debloat", "tweaks", self._t().primary),
@@ -918,8 +929,11 @@ class NazmulApp(ctk.CTk):
             fade_page(self._pages[key], self._t())
         if key == "activate" and hasattr(self, "_win_lines"):
             self._refresh_activation_status()
-        if key == "home" and hasattr(self, "_desktop_offer_host"):
-            self._refresh_desktop_offer_card()
+        if key == "home":
+            if hasattr(self, "_desktop_offer_host"):
+                self._refresh_desktop_offer_card()
+            if hasattr(self, "_tweak_back_host"):
+                self._refresh_tweak_back_panel()
 
     def _sel(self, prefix, state):
         for k, cb in self._checkboxes.items():
@@ -969,7 +983,7 @@ class NazmulApp(ctk.CTk):
             [(t.id, t.name, t.script) for t in tweaks],
             self._log_msg,
             on_done=lambda: (
-                setattr(self, "_busy", False),
+                self._tweak_batch_done(),
                 self._toast(toast_msg, self._t().success),
             ),
         )
@@ -1098,61 +1112,126 @@ class NazmulApp(ctk.CTk):
         threading.Thread(target=worker, daemon=True).start()
 
     def _refresh_desktop_offer_card(self):
-        if hasattr(self, "_desktop_offer_host") and self._desktop_offer_host.winfo_exists():
-            self._build_desktop_menu_offer(self._desktop_offer_host)
+        if getattr(self, "_desktop_menu_host", None) and self._desktop_menu_host.winfo_exists():
+            self._build_desktop_menu_offer(self._desktop_menu_host)
 
-    def _build_restore_card(self, parent):
+    def _refresh_tweak_back_panel(self):
+        if getattr(self, "_tweak_back_host", None) and self._tweak_back_host.winfo_exists():
+            self._build_tweak_back_panel(self._tweak_back_host)
+
+    def _tweak_batch_done(self):
+        self._busy = False
+        self._refresh_tweak_back_panel()
+
+    def _build_tweak_back_panel(self, parent):
         for w in parent.winfo_children():
             w.destroy()
+        self._tweak_back_checks.clear()
 
         t = self._t()
-        hist = get_applied_tweak_history()
-        has_last = has_last_session("tweak")
-        count = len(hist)
+        hist = sorted(
+            get_applied_tweak_history(),
+            key=lambda e: e.get("last_applied", ""),
+            reverse=True,
+        )
 
         card = ctk.CTkFrame(
             parent, fg_color=t.card, corner_radius=14,
-            border_width=2, border_color=t.warning if count or has_last else t.card_border,
+            border_width=2, border_color=t.warning if hist else t.card_border,
         )
-        card.pack(fill="x", pady=(0, 10))
-        ctk.CTkLabel(card, text="↩ Restore Previous Settings", font=FONT_HEADING,
-                     text_color=t.text).pack(anchor="w", padx=18, pady=(14, 4))
+        card.pack(fill="both", expand=True)
 
-        if count:
-            status = f"{count} tweak(s) saved on this PC — reopening the app keeps this history."
-        elif has_last:
-            status = "Last tweak batch is saved — you can undo it."
-        else:
-            status = "Applied tweaks before? Use reset to turn services back on."
+        ctk.CTkLabel(card, text="↩ Tweak Back", font=FONT_HEADING,
+                     text_color=t.text).pack(anchor="w", padx=14, pady=(14, 2))
+        ctk.CTkLabel(
+            card,
+            text="Check tweaks to revert — uncheck to keep.",
+            font=FONT_SMALL, text_color=t.text_muted,
+        ).pack(anchor="w", padx=14, pady=(0, 8))
 
-        status_lbl = ctk.CTkLabel(
-            card, text=status, font=FONT_SMALL, text_color=t.text_muted, justify="left",
+        if not hist:
+            ctk.CTkLabel(
+                card, text="No tweaks applied yet on this PC.",
+                font=FONT_SMALL, text_color=t.text_muted,
+            ).pack(anchor="w", padx=14, pady=(0, 14))
+            return
+
+        list_box = ctk.CTkScrollableFrame(
+            card, fg_color=t.input_bg, corner_radius=10,
+            height=min(280, 36 * len(hist) + 16),
+            scrollbar_button_color=t.primary,
+            scrollbar_button_hover_color=t.primary_hover,
         )
-        status_lbl.pack(anchor="w", padx=18, pady=(0, 8))
-        self._track_wrap(status_lbl, 0.85)
+        list_box.pack(fill="both", expand=True, padx=12, pady=(0, 8))
 
-        row = ctk.CTkFrame(card, fg_color="transparent")
-        row.pack(fill="x", padx=14, pady=(0, 14))
-        row.grid_columnconfigure(0, weight=1)
-        row.grid_columnconfigure(1, weight=1)
-        row.grid_columnconfigure(2, weight=1)
+        for entry in hist:
+            tid = entry.get("id", "")
+            name = entry.get("name", tid)
+            can_undo = tid and tid not in NO_UNDO_IDS and bool(get_undo_script(tid))
+            row = ctk.CTkFrame(list_box, fg_color="transparent")
+            row.pack(fill="x", pady=2)
+            label = name if can_undo else f"{name} (manual only)"
+            cb = ctk.CTkCheckBox(
+                row, text=label, font=FONT_SMALL, text_color=t.text,
+                fg_color=t.primary, hover_color=t.primary_hover,
+                border_color=t.card_border,
+            )
+            cb.pack(anchor="w", padx=8, pady=4)
+            if can_undo:
+                cb.select()
+                self._tweak_back_checks[tid] = cb
+            else:
+                cb.configure(state="disabled")
 
+        btn_row = ctk.CTkFrame(card, fg_color="transparent")
+        btn_row.pack(fill="x", padx=12, pady=(0, 14))
+        secondary_btn(btn_row, "All", lambda: self._tweak_back_select(True), t, width=52).pack(
+            side="left", padx=(0, 4))
+        secondary_btn(btn_row, "None", lambda: self._tweak_back_select(False), t, width=58).pack(
+            side="left", padx=4)
         colored_btn(
-            row, "Undo Last Batch", self._revert_last_tweaks, t, t.warning,
-            width=150, height=34,
-        ).grid(row=0, column=0, sticky="ew", padx=4, pady=4)
-        restore_btn = colored_btn(
-            row, "Restore All Recorded", self._revert_all_applied, t, t.primary,
-            width=150, height=34,
-        )
-        restore_btn.grid(row=0, column=1, sticky="ew", padx=4, pady=4)
-        if not count:
-            restore_btn.configure(state="disabled", fg_color=t.btn_secondary, text_color=t.text_muted)
+            btn_row, "Revert Checked", self._revert_checked_tweaks, t, t.warning,
+            width=130, height=32,
+        ).pack(side="right")
 
-        colored_btn(
-            row, "Reset Services & Defaults", self._restore_defaults, t, t.accent,
-            width=170, height=34,
-        ).grid(row=0, column=2, sticky="ew", padx=4, pady=4)
+    def _tweak_back_select(self, state: bool):
+        for cb in self._tweak_back_checks.values():
+            if state:
+                cb.select()
+            else:
+                cb.deselect()
+
+    def _revert_checked_tweaks(self):
+        if not self._guard():
+            return
+        selected = [
+            {"id": tid, "name": cb.cget("text").replace(" (manual only)", "")}
+            for tid, cb in self._tweak_back_checks.items()
+            if cb.get()
+        ]
+        if not selected:
+            messagebox.showinfo("Tweak Back", "Check at least one tweak to revert.")
+            return
+        names = [s["name"] for s in selected]
+        preview = "\n".join(f"  • {n}" for n in names[:10])
+        if len(names) > 10:
+            preview += f"\n  ... and {len(names) - 10} more"
+        if not messagebox.askyesno(
+            "Revert Checked Tweaks",
+            f"Revert {len(selected)} tweak(s)?\n\n{preview}\n\nServices/settings will go back toward Windows defaults.",
+            icon="warning",
+        ):
+            return
+        self._busy = True
+        self._show("log")
+        self._log_msg(f"[INFO] Reverting {len(selected)} checked tweak(s)...")
+        ids = [s["id"] for s in selected]
+
+        def _done():
+            remove_tweaks_from_history(ids)
+            self._tweak_batch_done()
+
+        run_revert_batch(selected, self._log_msg, on_done=_done, kind="tweak")
 
     def _desktop_menu_segment(self, parent, t, *, icon, title, desc, note, note_color,
                               btn_text, btn_color, command, enabled):
@@ -1508,7 +1587,7 @@ class NazmulApp(ctk.CTk):
         self._show("log")
         self._log_msg("[INFO] Restoring all recorded tweaks from this PC...")
         run_revert_all_applied(
-            self._log_msg, on_done=lambda: (setattr(self, "_busy", False), self._refresh_restore_card()),
+            self._log_msg, on_done=self._tweak_batch_done,
         )
 
     def _restore_defaults(self):
@@ -1527,12 +1606,8 @@ class NazmulApp(ctk.CTk):
         self._show("log")
         self._log_msg("[INFO] Resetting services and Windows defaults...")
         run_restore_defaults(
-            self._log_msg, on_done=lambda: (setattr(self, "_busy", False), self._refresh_restore_card()),
+            self._log_msg, on_done=self._tweak_batch_done,
         )
-
-    def _refresh_restore_card(self):
-        if self._page_key == "home" and getattr(self, "_restore_host", None):
-            self._build_restore_card(self._restore_host)
 
     def _revert_last_tweaks(self):
         if not self._guard():
@@ -1547,11 +1622,13 @@ class NazmulApp(ctk.CTk):
         self._busy = True
         self._show("log")
         self._log_msg(f"[INFO] Reverting tweak batch from {session.get('timestamp', '?')}...")
-        run_revert_batch(
-            items, self._log_msg,
-            on_done=lambda: (setattr(self, "_busy", False), self._refresh_restore_card()),
-            kind="tweak",
-        )
+        ids = [it.get("id") for it in items if it.get("id")]
+
+        def _done():
+            remove_tweaks_from_history(ids)
+            self._tweak_batch_done()
+
+        run_revert_batch(items, self._log_msg, on_done=_done, kind="tweak")
 
     def _revert_last_apps(self):
         if not self._guard():
@@ -1615,7 +1692,7 @@ class NazmulApp(ctk.CTk):
         if not is_admin():
             self._log_msg("[INFO] Standard mode — UAC will ask for Admin once")
         run_batch([(t.id, t.name, t.script) for t in tweaks],
-                  self._log_msg, on_done=lambda: setattr(self, "_busy", False))
+                  self._log_msg, on_done=self._tweak_batch_done)
 
     def _install_apps(self):
         if not self._guard():
@@ -1787,7 +1864,7 @@ class NazmulApp(ctk.CTk):
 
         def done():
             animate_progress(self._fresh_bar, 1.0)
-            self._busy = False
+            self._tweak_batch_done()
 
         if tweak_ids:
             run_batch(
@@ -1817,7 +1894,7 @@ class NazmulApp(ctk.CTk):
             self._log_msg("[INFO] Standard mode — UAC will ask for Admin once")
         run_batch(
             [(t.id, t.name, t.script) for t in tweaks],
-            self._log_msg, on_done=lambda: setattr(self, "_busy", False),
+            self._log_msg, on_done=self._tweak_batch_done,
         )
 
     def _run_fresh_apps(self):

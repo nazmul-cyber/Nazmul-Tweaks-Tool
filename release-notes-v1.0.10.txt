@@ -1,0 +1,12 @@
+Tweak Back panel — pick which tweaks to revert.
+
+**Home UI**
+- Removed "Restore Previous Settings" batch buttons
+- Left side: **Tweak Back** with checkboxes for every applied tweak
+- Check = revert, uncheck = keep
+- **All** / **None** / **Revert Checked** buttons
+
+**Behavior**
+- Reverted tweaks are removed from saved history
+- Panel refreshes after apply, revert, or returning to Home
+- Tweaks without undo script show as "(manual only)" and stay disabled

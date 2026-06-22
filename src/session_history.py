@@ -84,6 +84,18 @@ def clear_tweak_history() -> None:
             SESSION_PATH.unlink(missing_ok=True)
 
 
+def remove_tweaks_from_history(tweak_ids: list[str]) -> None:
+    """Remove reverted tweak ids from saved history."""
+    if not tweak_ids:
+        return
+    drop = {tid for tid in tweak_ids if tid}
+    data = _load_all()
+    hist = [e for e in data.get("tweak_history", []) if e.get("id") not in drop]
+    data["tweak_history"] = hist
+    SESSION_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SESSION_PATH.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
 def get_last_session(kind: str) -> dict | None:
     entry = _load_all().get(kind)
     if not entry or not entry.get("items"):
