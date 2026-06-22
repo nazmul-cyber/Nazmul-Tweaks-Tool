@@ -102,12 +102,13 @@ Windows & Office license status. MAS activator shortcuts (Windows 10 + 11).
 ### Fresh Windows Setup
 One-click preset for a new PC — pick recommended tweaks + apps, run full setup.
 
-### Tweak Back (sidebar)
-Every applied tweak is saved on your PC (survives app restarts). In the **left sidebar**:
+### Tweak Back
+Every applied tweak is saved on your PC (survives app restarts). Open **Tweak Back** in the sidebar — same list style as Tweaks:
 
-- Check tweaks you want to **revert** — uncheck to keep
-- **All** / **None** / **Revert** buttons
-- Tweaks without undo scripts show as **(manual)**
+- Shows only tweaks you already applied (icon, name, description)
+- Check to **revert** — uncheck to keep
+- Category filters, **All** / **None** / **Revert Checked**
+- Tweaks without undo scripts show as **(manual only)**
 
 ### More
 - **PC Manager** — install/open Microsoft PC Manager  

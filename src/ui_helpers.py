@@ -219,7 +219,7 @@ def info_badge(parent, tag: str, value: str, theme: Theme, command=None, accent:
         text_color="#FFFFFF", command=command or (lambda: None),
     )
     val_lbl.pack(side="left", padx=(2, 0))
-    return wrap, val_lbl
+    return wrap
 
 
 def category_chips(parent, categories, variable, command, theme: Theme):

@@ -1,0 +1,10 @@
+Fix startup crash + full Tweak Back page.
+
+**Fix**
+- Startup crash: `info_badge` returned tuple — `.pack()` failed on sidebar badges
+
+**Tweak Back**
+- New sidebar nav item: **↩ Tweak Back**
+- Same layout as Tweaks page (icon, name, description, checkboxes)
+- Shows only tweaks you already applied
+- Category filters + All / None / Revert Checked

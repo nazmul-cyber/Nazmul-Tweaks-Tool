@@ -64,6 +64,7 @@ class NazmulApp(ctk.CTk):
         self._busy = False
         self._logo_img = None
         self._tweak_filter_val = "All"
+        self._tweak_back_filter_val = "All"
         self._toast_label = None
         self._color_log = None
         self._page_scrolls = {}
@@ -184,6 +185,7 @@ class NazmulApp(ctk.CTk):
 
         for key, fn in [
             ("home", self._page_home), ("tweaks", self._page_tweaks),
+            ("tweakback", self._page_tweak_back),
             ("apps", self._page_apps), ("activate", self._page_activate),
             ("fresh", self._page_fresh), ("log", self._page_log),
         ]:
@@ -397,10 +399,13 @@ class NazmulApp(ctk.CTk):
         ctk.CTkFrame(sb, height=1, fg_color=t.card_border).pack(fill="x", padx=14, pady=8)
 
         for key, label in [
-            ("home", "Home"), ("tweaks", "Tweaks"), ("apps", "Apps"),
-            ("activate", "Activate"), ("fresh", "Fresh Setup"), ("log", "Log"),
+            ("home", "Home"), ("tweaks", "Tweaks"), ("tweakback", "Tweak Back"),
+            ("apps", "Apps"), ("activate", "Activate"), ("fresh", "Fresh Setup"), ("log", "Log"),
         ]:
-            icons = {"home": "🏠", "tweaks": "⚙", "apps": "📦", "activate": "🔑", "fresh": "🚀", "log": "📋"}
+            icons = {
+                "home": "🏠", "tweaks": "⚙", "tweakback": "↩", "apps": "📦",
+                "activate": "🔑", "fresh": "🚀", "log": "📋",
+            }
             active = key == self._page_key
             btn = ctk.CTkButton(
                 sb, text=f"  {icons[key]}  {label}", anchor="w", font=FONT_BODY, height=36,
@@ -412,10 +417,6 @@ class NazmulApp(ctk.CTk):
             )
             btn.pack(fill="x", padx=10, pady=1)
             self._nav_btns[key] = btn
-
-        self._sidebar_tweak_host = ctk.CTkFrame(sb, fg_color="transparent")
-        self._sidebar_tweak_host.pack(fill="x", padx=10, pady=(8, 4))
-        self._build_tweak_back_panel(self._sidebar_tweak_host, compact=True)
 
         self._rocket_btn = colored_btn(
             sb, "🚀 System Refresh", self._system_refresh, t, t.highlight,
@@ -722,6 +723,101 @@ class NazmulApp(ctk.CTk):
         self._tweak_filter_val = self._tweak_filter.get()
         self._render_tweaks(self._tweak_filter_val)
 
+    def _applied_tweak_ids(self) -> set[str]:
+        return {e["id"] for e in get_applied_tweak_history() if e.get("id")}
+
+    def _page_tweak_back(self, p):
+        p.grid_rowconfigure(2, weight=1)
+        self._header(
+            p, "Tweak Back",
+            "Same tweaks you applied — check to revert, uncheck to keep.",
+            [("Revert Checked", self._revert_checked_tweaks, "warning"),
+             ("None", lambda: self._tweak_back_select(False), "secondary"),
+             ("All", lambda: self._tweak_back_select(True), "secondary")],
+            show_back=True,
+        )
+
+        filt_wrap = ctk.CTkFrame(p, fg_color="transparent")
+        filt_wrap.grid(row=1, column=0, sticky="ew", padx=28, pady=6)
+        self._tweak_back_filter = ctk.StringVar(value=self._tweak_back_filter_val)
+        chip_frame, self._tb_cat_btns = category_chips(
+            filt_wrap, ["All"] + CATEGORIES, self._tweak_back_filter,
+            self._filter_tweak_back, self._t(),
+        )
+        chip_frame.pack(fill="x")
+
+        self._tweak_back_scroll = make_scroll(p, self._t())
+        self._tweak_back_scroll.grid(row=2, column=0, sticky="nsew", padx=28, pady=(0, 18))
+        self._page_scrolls["tweakback"] = self._tweak_back_scroll
+        self._render_tweak_back(self._tweak_back_filter_val)
+
+    def _render_tweak_back(self, cat: str = "All"):
+        if not getattr(self, "_tweak_back_scroll", None):
+            return
+        self._tweak_back_checks.clear()
+        for w in self._tweak_back_scroll.winfo_children():
+            w.destroy()
+
+        applied = self._applied_tweak_ids()
+        if not applied:
+            ctk.CTkLabel(
+                self._tweak_back_scroll,
+                text="No tweaks applied yet.\n\nGo to Tweaks, select items, and click Apply first.",
+                font=FONT_BODY, text_color=self._t().text_muted, justify="left",
+            ).pack(anchor="w", pady=12)
+            return
+
+        items = [t for t in TWEAKS if t.id in applied]
+        if cat != "All":
+            items = [t for t in items if t.category == cat]
+
+        hist_map = {e["id"]: e for e in get_applied_tweak_history() if e.get("id")}
+        items.sort(
+            key=lambda t: hist_map.get(t.id, {}).get("last_applied", ""),
+            reverse=True,
+        )
+
+        if not items:
+            ctk.CTkLabel(
+                self._tweak_back_scroll,
+                text=f"No applied tweaks in category '{cat}'.",
+                font=FONT_BODY, text_color=self._t().text_muted,
+            ).pack(anchor="w", pady=12)
+            return
+
+        for tweak in items:
+            can_undo = tweak.id not in NO_UNDO_IDS and bool(get_undo_script(tweak.id))
+            self._tweak_back_row(self._tweak_back_scroll, tweak, can_undo)
+
+    def _tweak_back_row(self, parent, tweak, can_undo: bool):
+        t = self._t()
+        row = ctk.CTkFrame(parent, fg_color=t.card, corner_radius=8,
+                           border_width=1, border_color=t.card_border)
+        row.pack(fill="x", pady=2)
+        name = f"{tweak.icon} {tweak.name}"
+        if not can_undo:
+            name += "  (manual only)"
+        cb = ctk.CTkCheckBox(
+            row, text=name, font=FONT_BODY, text_color=t.text,
+            fg_color=t.primary, hover_color=t.primary_hover, width=280,
+        )
+        cb.pack(side="left", padx=12, pady=8)
+        if can_undo:
+            cb.select()
+            self._tweak_back_checks[tweak.id] = cb
+        else:
+            cb.configure(state="disabled")
+        desc_lbl = ctk.CTkLabel(
+            row, text=tweak.description, font=FONT_SMALL, text_color=t.text_muted,
+            wraplength=400, justify="left",
+        )
+        desc_lbl.pack(side="left", padx=6, pady=8)
+        self._track_wrap(desc_lbl, 0.55)
+
+    def _filter_tweak_back(self):
+        self._tweak_back_filter_val = self._tweak_back_filter.get()
+        self._render_tweak_back(self._tweak_back_filter_val)
+
     def _page_apps(self, p):
         p.grid_rowconfigure(1, weight=1)
         self._header(p, "Essential Apps", "Install via winget. Revert Last uninstalls the previous batch.",
@@ -989,6 +1085,8 @@ class NazmulApp(ctk.CTk):
             self._refresh_activation_status()
         if key == "home" and hasattr(self, "_desktop_offer_host"):
             self._refresh_desktop_offer_card()
+        if key == "tweakback":
+            self._refresh_tweak_back_panel()
 
     def _sel(self, prefix, state):
         for k, cb in self._checkboxes.items():
@@ -1169,88 +1267,12 @@ class NazmulApp(ctk.CTk):
             self._build_desktop_menu_offer(self._desktop_menu_host)
 
     def _refresh_tweak_back_panel(self):
-        host = getattr(self, "_sidebar_tweak_host", None)
-        if host and host.winfo_exists():
-            self._build_tweak_back_panel(host, compact=True)
+        if getattr(self, "_tweak_back_scroll", None) and self._tweak_back_scroll.winfo_exists():
+            self._render_tweak_back(getattr(self, "_tweak_back_filter_val", "All"))
 
     def _tweak_batch_done(self):
         self._busy = False
         self._refresh_tweak_back_panel()
-
-    def _build_tweak_back_panel(self, parent, compact: bool = False):
-        for w in parent.winfo_children():
-            w.destroy()
-        self._tweak_back_checks.clear()
-
-        t = self._t()
-        hist = sorted(
-            get_applied_tweak_history(),
-            key=lambda e: e.get("last_applied", ""),
-            reverse=True,
-        )
-
-        card = ctk.CTkFrame(
-            parent, fg_color=t.card, corner_radius=12,
-            border_width=1, border_color=t.warning if hist else t.card_border,
-        )
-        card.pack(fill="x")
-
-        hdr = ctk.CTkFrame(card, fg_color="transparent")
-        hdr.pack(fill="x", padx=10, pady=(8, 2))
-        ctk.CTkLabel(hdr, text="↩ Tweak Back", font=FONT_HEADING,
-                     text_color=t.text).pack(side="left")
-        ctk.CTkLabel(
-            hdr, text=f"{len(hist)}" if hist else "0",
-            font=FONT_SMALL, text_color=t.text_muted,
-            fg_color=t.btn_secondary, corner_radius=10, width=28, height=22,
-        ).pack(side="right")
-
-        if not hist:
-            ctk.CTkLabel(
-                card, text="No tweaks applied yet.",
-                font=FONT_SMALL, text_color=t.text_muted,
-            ).pack(anchor="w", padx=10, pady=(0, 10))
-            return
-
-        list_h = 120 if compact else min(280, 32 * len(hist) + 12)
-        list_box = ctk.CTkScrollableFrame(
-            card, fg_color=t.input_bg, corner_radius=8,
-            height=list_h,
-            scrollbar_button_color=t.primary,
-            scrollbar_button_hover_color=t.primary_hover,
-        )
-        list_box.pack(fill="x", padx=8, pady=(2, 6))
-
-        font = ("Segoe UI", 10) if compact else FONT_SMALL
-        for entry in hist:
-            tid = entry.get("id", "")
-            name = entry.get("name", tid)
-            can_undo = tid and tid not in NO_UNDO_IDS and bool(get_undo_script(tid))
-            if compact and len(name) > 26:
-                name = name[:24] + "…"
-            label = name if can_undo else f"{name} (manual)"
-            cb = ctk.CTkCheckBox(
-                list_box, text=label, font=font, text_color=t.text,
-                fg_color=t.primary, hover_color=t.primary_hover,
-                border_color=t.card_border, height=22,
-            )
-            cb.pack(anchor="w", padx=6, pady=2)
-            if can_undo:
-                cb.select()
-                self._tweak_back_checks[tid] = cb
-            else:
-                cb.configure(state="disabled")
-
-        btn_row = ctk.CTkFrame(card, fg_color="transparent")
-        btn_row.pack(fill="x", padx=8, pady=(0, 8))
-        secondary_btn(btn_row, "All", lambda: self._tweak_back_select(True), t, width=44).pack(
-            side="left", padx=(0, 3))
-        secondary_btn(btn_row, "None", lambda: self._tweak_back_select(False), t, width=48).pack(
-            side="left", padx=3)
-        colored_btn(
-            btn_row, "Revert", self._revert_checked_tweaks, t, t.warning,
-            width=88 if compact else 130, height=28,
-        ).pack(side="right")
 
     def _tweak_back_select(self, state: bool):
         for cb in self._tweak_back_checks.values():
@@ -1262,8 +1284,9 @@ class NazmulApp(ctk.CTk):
     def _revert_checked_tweaks(self):
         if not self._guard():
             return
+        name_map = {t.id: t.name for t in TWEAKS}
         selected = [
-            {"id": tid, "name": cb.cget("text").replace(" (manual only)", "")}
+            {"id": tid, "name": name_map.get(tid, tid)}
             for tid, cb in self._tweak_back_checks.items()
             if cb.get()
         ]
