@@ -1,0 +1,5 @@
+New logo + full GitHub README.
+
+- Redesigned app icon (blue/cyan gradient, bolt + refresh ring)
+- Comprehensive README on GitHub — features, restore, updates explained
+- EXE and window icon updated

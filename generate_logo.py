@@ -1,9 +1,10 @@
-"""Generate Nazmul Tweaks Tool logo (PNG + ICO) — teal bolt + gear mark."""
+"""Generate Nazmul Tweaks Tool logo (PNG + ICO) — modern N + bolt + refresh ring."""
 
 from pathlib import Path
+import math
 
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageDraw, ImageFont
 except ImportError:
     print("pip install Pillow")
     raise
@@ -11,80 +12,107 @@ except ImportError:
 ASSETS = Path(__file__).parent / "assets"
 ASSETS.mkdir(exist_ok=True)
 
-BG_TOP = (15, 118, 110)      # teal-700
-BG_BOTTOM = (13, 148, 136)    # teal-600
-ACCENT = (45, 212, 191)       # teal-300
+# Matches app Light theme: blue primary + cyan highlight
+BG_TOP = (30, 64, 175)       # blue-800
+BG_BOTTOM = (8, 145, 178)    # cyan-600
+RING = (56, 189, 248)        # sky-400
+RING_DIM = (14, 116, 144)    # cyan-700
 BOLT = (255, 255, 255)
-GEAR = (204, 251, 241)        # teal-100
+ACCENT = (125, 211, 252)     # sky-300
 
 
 def _lerp(a, b, t):
     return int(a + (b - a) * t)
 
 
-def create_logo(size=256):
+def _rounded_gradient(size: int) -> Image.Image:
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-
-    margin = size // 12
-    radius = size // 4
+    margin = size // 14
+    radius = size // 5
     for y in range(margin, size - margin):
         t = (y - margin) / max(1, size - 2 * margin - 1)
-        r = _lerp(BG_TOP[0], BG_BOTTOM[0], t)
-        g = _lerp(BG_TOP[1], BG_BOTTOM[1], t)
-        b = _lerp(BG_TOP[2], BG_BOTTOM[2], t)
+        color = (
+            _lerp(BG_TOP[0], BG_BOTTOM[0], t),
+            _lerp(BG_TOP[1], BG_BOTTOM[1], t),
+            _lerp(BG_TOP[2], BG_BOTTOM[2], t),
+            255,
+        )
         draw.rounded_rectangle(
             [margin, y, size - margin, y + 1],
             radius=radius,
-            fill=(r, g, b, 255),
+            fill=color,
+        )
+    return img
+
+
+def create_logo(size=256):
+    img = _rounded_gradient(size)
+    draw = ImageDraw.Draw(img)
+    scale = size / 256.0
+    cx, cy = size // 2, size // 2
+
+    # Outer refresh ring
+    ring_pad = int(34 * scale)
+    draw.ellipse(
+        [ring_pad, ring_pad, size - ring_pad, size - ring_pad],
+        outline=(*RING, 200),
+        width=max(3, int(6 * scale)),
+    )
+    # Ring arrow ticks (refresh hint)
+    rr = (size - 2 * ring_pad) / 2
+    for deg in (35, 145, 215, 325):
+        ang = math.radians(deg)
+        x1 = cx + math.cos(ang) * (rr - 4 * scale)
+        y1 = cy + math.sin(ang) * (rr - 4 * scale)
+        x2 = cx + math.cos(ang + 0.35) * (rr + 8 * scale)
+        y2 = cy + math.sin(ang + 0.35) * (rr + 8 * scale)
+        draw.polygon(
+            [(x1, y1), (x2, y2), (x1 + math.cos(ang - 0.5) * 10 * scale, y1 + math.sin(ang - 0.5) * 10 * scale)],
+            fill=(*ACCENT, 220),
         )
 
-    # Subtle inner ring
-    ring = size // 5
+    # Inner glow disc
+    inner = int(52 * scale)
     draw.ellipse(
-        [ring, ring, size - ring, size - ring],
-        outline=(*ACCENT, 90),
-        width=max(2, size // 64),
+        [cx - inner, cy - inner, cx + inner, cy + inner],
+        fill=(*RING_DIM, 120),
+        outline=(*RING, 80),
+        width=max(2, int(3 * scale)),
     )
 
-    cx, cy = size // 2, size // 2
-    scale = size / 256.0
-
-    # Gear (top-right accent)
-    gx, gy = cx + int(42 * scale), cy - int(46 * scale)
-    gr = int(18 * scale)
-    draw.ellipse([gx - gr, gy - gr, gx + gr, gy + gr], fill=(*GEAR, 230))
-    for i in range(8):
-        import math
-        ang = math.radians(i * 45)
-        x1 = gx + math.cos(ang) * gr * 0.75
-        y1 = gy + math.sin(ang) * gr * 0.75
-        x2 = gx + math.cos(ang) * gr * 1.35
-        y2 = gy + math.sin(ang) * gr * 1.35
-        draw.line([x1, y1, x2, y2], fill=(*GEAR, 230), width=max(3, int(4 * scale)))
-
-    # Lightning bolt (center)
+    # Lightning bolt
     bolt = [
-        (cx + int(8 * scale), cy - int(62 * scale)),
-        (cx - int(18 * scale), cy + int(4 * scale)),
-        (cx + int(2 * scale), cy + int(4 * scale)),
-        (cx - int(10 * scale), cy + int(62 * scale)),
-        (cx + int(26 * scale), cy - int(8 * scale)),
-        (cx + int(4 * scale), cy - int(8 * scale)),
+        (cx + int(10 * scale), cy - int(58 * scale)),
+        (cx - int(20 * scale), cy + int(2 * scale)),
+        (cx + int(4 * scale), cy + int(2 * scale)),
+        (cx - int(8 * scale), cy + int(58 * scale)),
+        (cx + int(28 * scale), cy - int(10 * scale)),
+        (cx + int(6 * scale), cy - int(10 * scale)),
     ]
-    draw.polygon(bolt, fill=(*BOLT, 245))
+    draw.polygon(bolt, fill=(*BOLT, 250))
 
-    # Small refresh arc under bolt
-    arc_box = [cx - int(34 * scale), cy + int(18 * scale), cx + int(34 * scale), cy + int(70 * scale)]
-    draw.arc(arc_box, start=200, end=340, fill=(*ACCENT, 220), width=max(3, int(5 * scale)))
+    # Small "N" lettermark bottom-left
+    try:
+        font = ImageFont.truetype("arialbd.ttf", max(14, int(22 * scale)))
+    except OSError:
+        font = ImageFont.load_default()
+    draw.text(
+        (int(28 * scale), size - int(42 * scale)),
+        "N",
+        font=font,
+        fill=(*ACCENT, 230),
+    )
 
     return img
 
 
 if __name__ == "__main__":
-    logo = create_logo(256)
-    logo.save(ASSETS / "logo.png")
-    logo.save(
+    logo = create_logo(512)
+    logo_large = logo.resize((256, 256), Image.Resampling.LANCZOS)
+    logo_large.save(ASSETS / "logo.png")
+    logo_large.save(ASSETS / "nazmul-tweaks-tool.png")
+    logo_large.save(
         ASSETS / "logo.ico",
         format="ICO",
         sizes=[(256, 256), (128, 128), (64, 64), (48, 48), (32, 32), (16, 16)],
