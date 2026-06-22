@@ -1,0 +1,7 @@
+FIX: Install command that works on all Windows PCs.
+
+Copy ONE line into PowerShell (Run as Administrator) - see README on repo.
+
+Never use: irm ... | iex (broken - empty string error).
+
+Download Nazmul-Tweaks-Tool.exe and run - no Python needed.

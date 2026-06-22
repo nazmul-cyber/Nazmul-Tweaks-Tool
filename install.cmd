@@ -1,5 +1,3 @@
 @echo off
-title Nazmul Tweaks Tool - Install
-:: Double-click this file (or run as Admin) to install from GitHub
-powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1').Content)"
-pause
+title Nazmul Tweaks Tool
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$d='%LOCALAPPDATA%\NazmulTweaksTool';ni $d -Force|Out-Null;$e='$d\Nazmul Tweaks Tool.exe';iwr 'https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe' -OutFile $e -UseBasicParsing;Start-Process $e"

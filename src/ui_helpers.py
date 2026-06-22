@@ -295,26 +295,36 @@ def get_refresh_script_path():
     return get_scripts() / "refresh.ps1"
 
 
-INSTALL_PS1_URL = (
-    "https://raw.githubusercontent.com/nazmul-cyber/"
-    "Nazmul-Tweaks-Tool/main/scripts/install.ps1"
+EXE_DOWNLOAD_URL = (
+    "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/"
+    "Nazmul-Tweaks-Tool.exe"
 )
 
 
 def get_install_command() -> str:
     return (
-        'powershell -NoProfile -ExecutionPolicy Bypass -Command '
-        f'"iex ((Invoke-WebRequest -UseBasicParsing -Uri \'{INSTALL_PS1_URL}\').Content)"'
+        '$d="$env:LOCALAPPDATA\\NazmulTweaksTool";ni $d -Force|Out-Null;'
+        '$e="$d\\Nazmul Tweaks Tool.exe";'
+        f'iwr "{EXE_DOWNLOAD_URL}" -OutFile $e -UseBasicParsing;'
+        "Start-Process $e"
     )
 
 
 def launch_public_install() -> bool:
-    """Run the public GitHub one-line installer as Admin."""
-    inner = (
-        f"iex ((Invoke-WebRequest -UseBasicParsing -Uri '{INSTALL_PS1_URL}').Content)"
-    )
-    params = f'-NoProfile -ExecutionPolicy Bypass -Command "{inner}"'
-    return _shell_elevate("powershell.exe", params)
+    """Download latest EXE and open it (no iex, no admin required)."""
+    import subprocess
+    import sys
+
+    inner = get_install_command()
+    flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+    try:
+        subprocess.Popen(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", inner],
+            creationflags=flags,
+        )
+        return True
+    except Exception:
+        return False
 
 
 def _shell_elevate(executable: str, params: str) -> bool:

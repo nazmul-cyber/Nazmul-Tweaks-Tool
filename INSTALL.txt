@@ -1,12 +1,14 @@
-NAZMUL TWEAKS TOOL - INSTALL (copy ONE line below)
-==================================================
+NAZMUL TWEAKS TOOL - OPEN THE APP
+==================================
 
-Open PowerShell as Administrator, paste this ONE line, press Enter:
+Copy ALL 5 lines below into PowerShell, press Enter.
+Software downloads and opens automatically.
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1').Content)"
+$d="$env:LOCALAPPDATA\NazmulTweaksTool"
+ni $d -ItemType Directory -Force | Out-Null
+$e="$d\Nazmul Tweaks Tool.exe"
+iwr "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe" -OutFile $e -UseBasicParsing
+Start-Process $e
 
-OR download EXE directly in browser:
-
+Browser download:
 https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
-
-DO NOT USE: irm ... | iex   (broken on Windows)

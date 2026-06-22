@@ -1224,12 +1224,12 @@ class NazmulApp(ctk.CTk):
 
     def _run_install(self):
         self._show("log")
-        self._log_msg("[INFO] Launching public installer from GitHub (Admin)...")
+        self._log_msg("[INFO] Downloading latest EXE from GitHub...")
         self._log_msg(f"[INFO] Command: {get_install_command()}")
         ok = launch_public_install()
         if ok:
-            self._toast("Installer opened — allow UAC", self._t().success)
-            self._log_msg("[OK] Admin PowerShell opened - download + shortcut")
+            self._toast("Downloading — app will open when ready", self._t().success)
+            self._log_msg("[OK] Download started — Nazmul Tweaks Tool will open")
         else:
             script = get_install_script_path()
             if script.exists():
