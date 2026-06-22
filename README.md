@@ -18,6 +18,7 @@ $d="$env:LOCALAPPDATA\NazmulTweaksTool"
 ni $d -ItemType Directory -Force | Out-Null
 $e="$d\Nazmul Tweaks Tool.exe"
 iwr "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe" -OutFile $e -UseBasicParsing
+Unblock-File $e -ErrorAction SilentlyContinue
 Start-Process $e
 ```
 
@@ -28,8 +29,10 @@ No `iex`. No pipe. No Admin needed just to open the app.
 ## Or: 1-line version
 
 ```powershell
-$d="$env:LOCALAPPDATA\NazmulTweaksTool";ni $d -Force|Out-Null;$e="$d\Nazmul Tweaks Tool.exe";iwr "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe" -OutFile $e -UseBasicParsing;Start-Process $e
+$d="$env:LOCALAPPDATA\NazmulTweaksTool";ni $d -Force|Out-Null;$e="$d\Nazmul Tweaks Tool.exe";iwr "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe" -OutFile $e -UseBasicParsing;Unblock-File $e -EA 0;Start-Process $e
 ```
+
+> **Security popup?** Click **Run**. Unsigned free software shows "Unknown Publisher" — that is normal. `Unblock-File` above reduces the warning.
 
 ---
 

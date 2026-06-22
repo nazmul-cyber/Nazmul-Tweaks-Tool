@@ -67,6 +67,7 @@ $lnk.Description = "Nazmul Tweaks Tool"
 $lnk.Save()
 Write-NT "Desktop shortcut created." "Green"
 
+Unblock-File $ExePath -ErrorAction SilentlyContinue
 Write-NT "Opening Nazmul Tweaks Tool..." "Cyan"
 Start-Process $ExePath
 

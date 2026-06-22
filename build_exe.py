@@ -3,10 +3,26 @@
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).parent
 ASSETS = ROOT / "assets"
+SRC = ROOT / "src"
+
+# Bundle as Python modules (NOT --add-data) so stdlib imports work in frozen EXE.
+HIDDEN_IMPORTS = [
+    "app", "executor", "themes", "tweaks", "apps", "paths",
+    "ui_helpers", "animations", "color_log", "resource_bar", "session_history",
+    "customtkinter", "PIL", "PIL._tkinter_finder", "PIL.Image", "PIL.ImageTk",
+    "darkdetect", "uuid", "winreg", "ctypes", "json", "threading", "tempfile",
+    "dataclasses", "pathlib", "typing", "re", "datetime",
+]
+
+EXCLUDES = [
+    "numpy", "matplotlib", "pandas", "scipy", "pytest",
+    "setuptools", "distutils", "tkinter.test",
+]
 
 
 def ensure_logo():
@@ -24,14 +40,31 @@ def _format_size(path: Path) -> str:
     return f"{size:,} bytes"
 
 
+def verify_exe(exe: Path) -> bool:
+    """Smoke-test: EXE must stay alive 5s without error dialog."""
+    print("Verifying EXE launches...")
+    proc = subprocess.Popen([str(exe)], creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+    time.sleep(5)
+    code = proc.poll()
+    if code is not None and code != 0:
+        print(f"  FAIL: EXE exited immediately with code {code}")
+        log = ROOT / "launch.log"
+        if log.exists():
+            print(log.read_text(encoding="utf-8", errors="replace")[-800:])
+        return False
+    proc.terminate()
+    try:
+        proc.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+    print("  OK: EXE launched and ran 5 seconds")
+    return True
+
+
 def build():
     ensure_logo()
     icon = ASSETS / "logo.ico"
-    # Exclude heavy optional deps PyInstaller pulls via Pillow (numpy ~20MB bloat).
-    excludes = [
-        "numpy", "matplotlib", "pandas", "scipy", "pytest",
-        "setuptools", "distutils", "tkinter.test",
-    ]
+
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--name", "Nazmul Tweaks Tool",
@@ -39,15 +72,16 @@ def build():
         "--windowed",
         "--noconfirm",
         "--clean",
+        "--noupx",
+        "--paths", str(SRC),
         "--collect-all", "customtkinter",
-        "--hidden-import", "PIL",
-        "--hidden-import", "PIL._tkinter_finder",
         "--add-data", f"{ASSETS};assets",
         "--add-data", f"{ROOT / 'scripts'};scripts",
         "--add-data", f"{ROOT / 'data'};data",
-        "--add-data", f"{ROOT / 'src'};src",
     ]
-    for mod in excludes:
+    for mod in HIDDEN_IMPORTS:
+        cmd += ["--hidden-import", mod]
+    for mod in EXCLUDES:
         cmd += ["--exclude-module", mod]
     if icon.exists():
         cmd += ["--icon", str(icon)]
@@ -63,14 +97,19 @@ def build():
         raise FileNotFoundError(f"Build finished but EXE not found: {exe}")
 
     shutil.copy2(exe, release)
+
+    if not verify_exe(release):
+        raise RuntimeError("EXE verification failed — fix build before publishing")
+
     print("\nEXE ready:")
-    lines = []
     for artifact in (icon, exe, release):
         print(f"  {artifact}")
         print(f"    size: {_format_size(artifact)}")
-        lines.append(f"{artifact}\t{artifact.stat().st_size}")
 
-    (ROOT / "build-result.txt").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (ROOT / "build-result.txt").write_text(
+        "\n".join(f"{p}\t{p.stat().st_size}" for p in (icon, exe, release)) + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

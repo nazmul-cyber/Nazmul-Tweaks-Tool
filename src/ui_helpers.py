@@ -306,6 +306,7 @@ def get_install_command() -> str:
         '$d="$env:LOCALAPPDATA\\NazmulTweaksTool";ni $d -Force|Out-Null;'
         '$e="$d\\Nazmul Tweaks Tool.exe";'
         f'iwr "{EXE_DOWNLOAD_URL}" -OutFile $e -UseBasicParsing;'
+        "Unblock-File $e -ErrorAction SilentlyContinue;"
         "Start-Process $e"
     )
 

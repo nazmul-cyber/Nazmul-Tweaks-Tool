@@ -8,6 +8,7 @@ $d="$env:LOCALAPPDATA\NazmulTweaksTool"
 ni $d -ItemType Directory -Force | Out-Null
 $e="$d\Nazmul Tweaks Tool.exe"
 iwr "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe" -OutFile $e -UseBasicParsing
+Unblock-File $e -ErrorAction SilentlyContinue
 Start-Process $e
 
 Browser download:
