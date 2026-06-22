@@ -9,6 +9,8 @@ Free Windows optimizer — Chris Titus style: **copy, paste, app opens**.
 
 ## Open the app (1 line — like WinUtil)
 
+> **Do not use the old 5-line `LOCALAPPDATA` command** — it fails with `PermissionDenied` on many PCs. Use only the line below.
+
 **PowerShell** → paste → Enter → window opens.
 
 ```powershell
