@@ -1,0 +1,10 @@
+Check for Updates in sidebar + Inno Setup installer.
+
+**Sidebar**
+- Dedicated **Check for Updates** button (left sidebar, below Theme)
+
+**Installer**
+- Inno Setup: `installer\Nazmul-Tweaks-Tool-Setup-v1.0.18.exe`
+- Installs to `%LOCALAPPDATA%\NazmulTweaksTool`
+- Optional desktop shortcut
+- Build: `scripts\build_installer.ps1`

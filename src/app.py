@@ -419,6 +419,11 @@ class NazmulApp(ctk.CTk):
         ctk.CTkLabel(theme_box, text="Light", font=FONT_BODY,
                      text_color=t.text).pack(anchor="w")
 
+        colored_btn(
+            sb, "⬆ Check for Updates", self._check_updates, t, t.primary,
+            width=248, height=32,
+        ).pack(fill="x", padx=10, pady=(4, 8))
+
         admin_ok = is_admin()
         mode_txt = "Admin mode" if admin_ok else "Standard — UAC on Apply"
         ctk.CTkLabel(sb, text=mode_txt,
