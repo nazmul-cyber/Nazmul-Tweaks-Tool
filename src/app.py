@@ -27,8 +27,8 @@ from color_log import ColorLog
 from ui_helpers import (
     make_scroll, secondary_btn, primary_btn, category_chips, colored_btn,
     get_install_command, get_install_script_path,
-    get_refresh_script_path, setup_global_scroll, apply_theme_live,
-    launch_elevated_ps1, launch_mas, launch_mas_action,
+    get_refresh_script_path, get_install_command, setup_global_scroll, apply_theme_live,
+    launch_elevated_ps1, launch_public_install, launch_mas, launch_mas_action,
     launch_elevated_tweak_scripts,
 )
 
@@ -1223,21 +1223,24 @@ class NazmulApp(ctk.CTk):
         )
 
     def _run_install(self):
-        script = get_install_script_path()
-        if not script.exists():
-            self._toast("install.ps1 not found!", self._t().error)
-            self._log_msg("[ERR] install.ps1 not found at " + str(script))
-            return
         self._show("log")
-        self._log_msg("[INFO] Launching one-line installer (Admin)...")
-        self._log_msg(f"[INFO] Script: {script}")
-        ok = launch_elevated_ps1(script)
+        self._log_msg("[INFO] Launching public installer from GitHub (Admin)...")
+        self._log_msg(f"[INFO] Command: {get_install_command()}")
+        ok = launch_public_install()
         if ok:
-            self._toast("Install window opened!", self._t().success)
-            self._log_msg("[OK] Admin PowerShell opened - follow installer steps")
+            self._toast("Installer opened — allow UAC", self._t().success)
+            self._log_msg("[OK] Admin PowerShell opened - download + shortcut")
         else:
-            self._toast("Could not launch (UAC cancelled?)", self._t().error)
-            self._log_msg("[ERR] Failed to launch installer - allow UAC prompt")
+            script = get_install_script_path()
+            if script.exists():
+                self._log_msg("[INFO] Fallback: local install.ps1...")
+                ok = launch_elevated_ps1(script)
+            if ok:
+                self._toast("Install window opened!", self._t().success)
+                self._log_msg("[OK] Admin PowerShell opened")
+            else:
+                self._toast("Could not launch (UAC cancelled?)", self._t().error)
+                self._log_msg("[ERR] Allow UAC or download EXE from GitHub Releases")
 
     def _guard(self):
         if self._busy:

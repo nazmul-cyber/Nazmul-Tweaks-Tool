@@ -1,5 +1,6 @@
 # Nazmul Tweaks Tool - Public One-Line Installer
-# Usage: iex (irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1)
+# Public install (paste in PowerShell Admin - ONE line, copy from GitHub README):
+# powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1').Content)"
 
 $ErrorActionPreference = "Stop"
 

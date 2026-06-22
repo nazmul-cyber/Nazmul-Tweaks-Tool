@@ -1,0 +1,12 @@
+NAZMUL TWEAKS TOOL - INSTALL (copy ONE line below)
+==================================================
+
+Open PowerShell as Administrator, paste this ONE line, press Enter:
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Invoke-WebRequest -UseBasicParsing -Uri 'https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1').Content)"
+
+OR download EXE directly in browser:
+
+https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
+
+DO NOT USE: irm ... | iex   (broken on Windows)

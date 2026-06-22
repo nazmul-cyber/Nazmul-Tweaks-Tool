@@ -295,11 +295,26 @@ def get_refresh_script_path():
     return get_scripts() / "refresh.ps1"
 
 
+INSTALL_PS1_URL = (
+    "https://raw.githubusercontent.com/nazmul-cyber/"
+    "Nazmul-Tweaks-Tool/main/scripts/install.ps1"
+)
+
+
 def get_install_command() -> str:
     return (
-        "iex (irm https://raw.githubusercontent.com/nazmul-cyber/"
-        "Nazmul-Tweaks-Tool/main/scripts/install.ps1)"
+        'powershell -NoProfile -ExecutionPolicy Bypass -Command '
+        f'"iex ((Invoke-WebRequest -UseBasicParsing -Uri \'{INSTALL_PS1_URL}\').Content)"'
     )
+
+
+def launch_public_install() -> bool:
+    """Run the public GitHub one-line installer as Admin."""
+    inner = (
+        f"iex ((Invoke-WebRequest -UseBasicParsing -Uri '{INSTALL_PS1_URL}').Content)"
+    )
+    params = f'-NoProfile -ExecutionPolicy Bypass -Command "{inner}"'
+    return _shell_elevate("powershell.exe", params)
 
 
 def _shell_elevate(executable: str, params: str) -> bool:
