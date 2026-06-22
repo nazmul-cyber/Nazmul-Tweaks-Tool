@@ -6,6 +6,8 @@ from pathlib import Path
 import json
 import sys
 import threading
+import time
+import webbrowser
 
 from paths import get_root, get_assets, get_scripts
 from themes import DEFAULT_THEME, THEMES, THEME_ORDER, Theme, FONT_TITLE, FONT_HEADING, FONT_BODY, FONT_SMALL, FONT_MONO, text_for_bg
@@ -27,16 +29,18 @@ from session_history import (
     remove_tweaks_from_history,
 )
 from tweaks import get_undo_script, NO_UNDO_IDS
-from animations import animate_progress, fade_page, animate_card_hover, pulse_widget, click_bounce
+from animations import animate_progress, fade_page, animate_card_hover, click_bounce
 from color_log import ColorLog
-from version import APP_VERSION
+from version import (
+    APP_VERSION, GITHUB_PROFILE, GITHUB_REPO, LICENSE_URL, EXE_SIZE_LABEL,
+)
 from updater import check_for_updates, download_update, launch_update, EXE_URL
 from ui_helpers import (
     make_scroll, secondary_btn, primary_btn, category_chips, colored_btn,
     get_install_command, get_install_script_path,
     get_refresh_script_path, get_install_command, setup_global_scroll, apply_theme_live,
     launch_elevated_ps1, launch_public_install, launch_update_script, launch_mas, launch_mas_action,
-    launch_elevated_tweak_scripts, sync_scroll_frame_width,
+    launch_elevated_tweak_scripts, sync_scroll_frame_width, info_badge,
 )
 
 ASSETS = get_assets()
@@ -71,6 +75,9 @@ class NazmulApp(ctk.CTk):
         self._resize_job = None
         self._applied_size = (0, 0)
         self._applied_wrap_w = 0
+        self._stats_busy = False
+        self._github_avatar_img = None
+        self._sidebar_frame = None
 
         ctk.set_appearance_mode(self._theme.ctk_mode)
         self.configure(fg_color=self._theme.bg)
@@ -78,7 +85,8 @@ class NazmulApp(ctk.CTk):
         self._build_all()
         self._setup_boost_menu()
         self._show("home", animate=False)
-        self.after(6000, self._check_updates_silent)
+        self.after(8000, self._check_updates_silent)
+        self.after(400, self._load_github_avatar)
 
     def _load_pref(self, key, default):
         try:
@@ -124,6 +132,7 @@ class NazmulApp(ctk.CTk):
         self._refresh_nav_colors()
         if getattr(self, "_theme_menu", None):
             self._theme_menu.set(self._theme.label)
+        self._refresh_tweak_back_panel()
         self._toast(f"Theme: {self._theme.label}", self._theme.primary)
 
     def _on_theme_pick(self, label: str):
@@ -211,7 +220,7 @@ class NazmulApp(ctk.CTk):
                 self.after_cancel(self._resize_job)
             except Exception:
                 pass
-        self._resize_job = self.after(250, self._finish_resize)
+        self._resize_job = self.after(400, self._finish_resize)
 
     def _finish_resize(self):
         self._resize_job = None
@@ -219,7 +228,7 @@ class NazmulApp(ctk.CTk):
         if size == self._applied_size:
             return
         self._applied_size = size
-        content_w = max(420, size[0] - 300)
+        content_w = max(420, size[0] - 332)
         if abs(content_w - self._applied_wrap_w) >= 24:
             self._applied_wrap_w = content_w
             for label, ratio in self._wrap_labels:
@@ -328,27 +337,64 @@ class NazmulApp(ctk.CTk):
 
         self._boost_outside_bind = self.bind("<Button-1>", _outside, add="+")
 
+    def _open_url(self, url: str):
+        try:
+            webbrowser.open(url)
+        except Exception:
+            self._toast("Could not open link", self._t().error)
+
+    def _load_github_avatar(self):
+        def worker():
+            cache = CONFIG_PATH.parent / "github-avatar.png"
+            try:
+                if not cache.exists() or cache.stat().st_size < 200:
+                    import urllib.request
+                    urllib.request.urlretrieve(f"{GITHUB_PROFILE}.png?size=64", cache)
+                self.after(0, lambda: self._apply_github_avatar(cache))
+            except Exception:
+                pass
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _apply_github_avatar(self, path: Path):
+        if not getattr(self, "_github_btn", None):
+            return
+        try:
+            self._github_avatar_img = ctk.CTkImage(
+                light_image=str(path), dark_image=str(path), size=(30, 30),
+            )
+            self._github_btn.configure(image=self._github_avatar_img, text="")
+        except Exception:
+            pass
+
     def _build_sidebar(self):
         t = self._t()
-        sb = ctk.CTkFrame(self, width=240, fg_color=t.sidebar, corner_radius=0,
+        sb = ctk.CTkFrame(self, width=272, fg_color=t.sidebar, corner_radius=0,
                           border_width=1, border_color=t.card_border)
         sb.grid(row=0, column=0, sticky="nsew")
         sb.grid_propagate(False)
+        self._sidebar_frame = sb
 
         logo_frame = ctk.CTkFrame(sb, fg_color="transparent")
-        logo_frame.pack(fill="x", padx=18, pady=(20, 4))
+        logo_frame.pack(fill="x", padx=14, pady=(16, 4))
         png = ASSETS / "logo.png"
         if png.exists():
             try:
-                self._logo_img = ctk.CTkImage(light_image=str(png), dark_image=str(png), size=(40, 40))
+                self._logo_img = ctk.CTkImage(light_image=str(png), dark_image=str(png), size=(44, 44))
                 ctk.CTkLabel(logo_frame, image=self._logo_img, text="").pack(side="left", padx=(0, 8))
             except Exception:
                 pass
         tf = ctk.CTkFrame(logo_frame, fg_color="transparent")
-        tf.pack(side="left")
-        ctk.CTkLabel(tf, text="Nazmul", font=FONT_TITLE, text_color=t.primary).pack(anchor="w")
+        tf.pack(side="left", fill="x", expand=True)
+        ctk.CTkLabel(tf, text="Nazmul", font=("Segoe UI", 18, "bold"), text_color=t.primary).pack(anchor="w")
         ctk.CTkLabel(tf, text="Tweaks Tool", font=FONT_SMALL, text_color=t.text_muted).pack(anchor="w")
-        ctk.CTkFrame(sb, height=1, fg_color=t.card_border).pack(fill="x", padx=16, pady=10)
+        self._github_btn = ctk.CTkButton(
+            logo_frame, text="GH", width=34, height=34, corner_radius=17,
+            fg_color=t.card, hover_color=t.card_hover,
+            text_color=t.primary, font=FONT_SMALL,
+            command=lambda: self._open_url(GITHUB_PROFILE),
+        )
+        self._github_btn.pack(side="right", padx=(4, 0))
+        ctk.CTkFrame(sb, height=1, fg_color=t.card_border).pack(fill="x", padx=14, pady=8)
 
         for key, label in [
             ("home", "Home"), ("tweaks", "Tweaks"), ("apps", "Apps"),
@@ -357,36 +403,37 @@ class NazmulApp(ctk.CTk):
             icons = {"home": "🏠", "tweaks": "⚙", "apps": "📦", "activate": "🔑", "fresh": "🚀", "log": "📋"}
             active = key == self._page_key
             btn = ctk.CTkButton(
-                sb, text=f"  {icons[key]}  {label}", anchor="w", font=FONT_BODY, height=40,
+                sb, text=f"  {icons[key]}  {label}", anchor="w", font=FONT_BODY, height=36,
                 corner_radius=10,
                 fg_color=t.nav_active_bg if active else "transparent",
                 text_color=t.nav_active_text if active else t.text,
                 hover_color=t.nav_active_bg,
                 command=lambda k=key: self._show(k),
             )
-            btn.pack(fill="x", padx=12, pady=2)
+            btn.pack(fill="x", padx=10, pady=1)
             self._nav_btns[key] = btn
 
-        ctk.CTkFrame(sb, fg_color="transparent").pack(expand=True)
+        self._sidebar_tweak_host = ctk.CTkFrame(sb, fg_color="transparent")
+        self._sidebar_tweak_host.pack(fill="x", padx=10, pady=(8, 4))
+        self._build_tweak_back_panel(self._sidebar_tweak_host, compact=True)
 
         self._rocket_btn = colored_btn(
-            sb, "🚀 Refresh", self._system_refresh, t, t.highlight,
-            width=200, height=46,
+            sb, "🚀 System Refresh", self._system_refresh, t, t.highlight,
+            width=248, height=40,
         )
-        self._rocket_btn.pack(fill="x", padx=12, pady=(0, 10))
-        pulse_widget(self._rocket_btn, t.highlight, t.primary, times=2, interval=200)
+        self._rocket_btn.pack(fill="x", padx=10, pady=(6, 8))
 
         self._resource_bar = ResourceBar(sb, t)
-        self._resource_bar.pack(fill="x", padx=12, pady=(0, 8))
+        self._resource_bar.pack(fill="x", padx=10, pady=(0, 6))
 
         theme_box = ctk.CTkFrame(sb, fg_color="transparent")
-        theme_box.pack(fill="x", padx=12, pady=(0, 8))
+        theme_box.pack(fill="x", padx=10, pady=(0, 6))
         ctk.CTkLabel(theme_box, text="Theme", font=FONT_SMALL,
-                     text_color=t.text_muted).pack(anchor="w", pady=(0, 4))
+                     text_color=t.text_muted).pack(anchor="w", pady=(0, 3))
         labels = [THEMES[k].label for k in THEME_ORDER if k in THEMES]
         self._theme_menu = ctk.CTkOptionMenu(
             theme_box, values=labels, command=self._on_theme_pick,
-            font=FONT_SMALL, height=32, corner_radius=8,
+            font=FONT_SMALL, height=30, corner_radius=8,
             fg_color=t.card, button_color=t.primary, button_hover_color=t.primary_hover,
             dropdown_fg_color=t.card, dropdown_hover_color=t.card_hover,
             text_color=t.text,
@@ -394,24 +441,35 @@ class NazmulApp(ctk.CTk):
         self._theme_menu.pack(fill="x")
         self._theme_menu.set(t.label)
 
-        ver_box = ctk.CTkFrame(sb, fg_color="transparent")
-        ver_box.pack(fill="x", padx=12, pady=(0, 8))
-        self._version_label = ctk.CTkLabel(
-            ver_box, text=f"v{APP_VERSION}", font=FONT_SMALL, text_color=t.text_muted,
-        )
-        self._version_label.pack(anchor="w", pady=(0, 4))
+        badge_box = ctk.CTkFrame(sb, fg_color="transparent")
+        badge_box.pack(fill="x", padx=10, pady=(0, 6))
+        badge_box.grid_columnconfigure(0, weight=1)
+        badge_box.grid_columnconfigure(1, weight=1)
+        badges = [
+            ("RELEASE", f"v{APP_VERSION}", self._check_updates, t.primary),
+            ("DOWNLOAD", "EXE", lambda: self._open_url(f"{GITHUB_REPO}/releases/latest/download/Nazmul-Tweaks-Tool.exe"), t.success),
+            ("SIZE", EXE_SIZE_LABEL, lambda: self._toast(f"Portable EXE {EXE_SIZE_LABEL}", t.highlight), t.highlight),
+            ("LICENSE", "MIT", lambda: self._open_url(LICENSE_URL), t.accent),
+        ]
+        for i, (tag, val, cmd, accent) in enumerate(badges):
+            r, c = divmod(i, 2)
+            cell = ctk.CTkFrame(badge_box, fg_color="transparent")
+            cell.grid(row=r, column=c, sticky="ew", padx=2, pady=2)
+            info_badge(cell, tag, val, t, command=cmd, accent=accent).pack(anchor="w")
+
         colored_btn(
-            ver_box, "Check for updates", self._check_updates, t, t.primary,
-            width=200, height=30,
-        ).pack(fill="x")
+            sb, "⬆ Check for Updates", self._check_updates, t, t.primary,
+            width=248, height=34,
+        ).pack(fill="x", padx=10, pady=(0, 6))
 
         admin_ok = is_admin()
         mode_txt = "Admin mode" if admin_ok else "Standard — UAC on Apply"
         ctk.CTkLabel(sb, text=mode_txt,
-                     font=FONT_SMALL, text_color=t.success if admin_ok else t.warning).pack(padx=16, anchor="w")
+                     font=FONT_SMALL, text_color=t.success if admin_ok else t.warning).pack(padx=14, anchor="w")
         wg = check_winget()
         ctk.CTkLabel(sb, text="winget ready" if wg else "winget missing",
-                     font=FONT_SMALL, text_color=t.success if wg else t.error).pack(padx=16, anchor="w", pady=(0, 14))
+                     font=FONT_SMALL, text_color=t.success if wg else t.error).pack(
+            padx=14, anchor="w", pady=(0, 12))
 
     def _start_resource_poll(self):
         if self._stats_poll_id:
@@ -420,12 +478,21 @@ class NazmulApp(ctk.CTk):
             except Exception:
                 pass
         self._poll_resource_stats()
-        self._stats_poll_id = self.after(3000, self._start_resource_poll)
+        self._stats_poll_id = self.after(6000, self._start_resource_poll)
 
     def _poll_resource_stats(self):
+        if self._stats_busy or self._busy:
+            return
+        self._stats_busy = True
+
         def worker():
             stats = get_system_stats()
-            self.after(0, lambda: self._resource_bar.update_stats(stats) if self._resource_bar else None)
+            def done():
+                self._stats_busy = False
+                if self._resource_bar:
+                    self._resource_bar.update_stats(stats)
+            self.after(0, done)
+
         threading.Thread(target=worker, daemon=True).start()
 
     def _active_scroll(self):
@@ -523,17 +590,8 @@ class NazmulApp(ctk.CTk):
         colored_btn(hint_card, "PC Manager", self._pc_manager_action, self._t(),
                       self._t().primary, width=160, height=34).pack(anchor="w", padx=16, pady=(0, 14))
 
-        split_row = ctk.CTkFrame(body, fg_color="transparent")
-        split_row.pack(fill="x", pady=(0, 10))
-        split_row.grid_columnconfigure(0, weight=2)
-        split_row.grid_columnconfigure(1, weight=3)
-
-        self._tweak_back_host = ctk.CTkFrame(split_row, fg_color="transparent")
-        self._tweak_back_host.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
-        self._build_tweak_back_panel(self._tweak_back_host)
-
-        self._desktop_menu_host = ctk.CTkFrame(split_row, fg_color="transparent")
-        self._desktop_menu_host.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        self._desktop_menu_host = ctk.CTkFrame(body, fg_color="transparent")
+        self._desktop_menu_host.pack(fill="x", pady=(0, 10))
         self._build_desktop_menu_offer(self._desktop_menu_host)
 
         cards_data = [
@@ -929,11 +987,8 @@ class NazmulApp(ctk.CTk):
             fade_page(self._pages[key], self._t())
         if key == "activate" and hasattr(self, "_win_lines"):
             self._refresh_activation_status()
-        if key == "home":
-            if hasattr(self, "_desktop_offer_host"):
-                self._refresh_desktop_offer_card()
-            if hasattr(self, "_tweak_back_host"):
-                self._refresh_tweak_back_panel()
+        if key == "home" and hasattr(self, "_desktop_offer_host"):
+            self._refresh_desktop_offer_card()
 
     def _sel(self, prefix, state):
         for k, cb in self._checkboxes.items():
@@ -1095,8 +1150,6 @@ class NazmulApp(ctk.CTk):
         if not script.exists():
             self._toast("refresh.ps1 missing", self._t().error)
             return
-        if getattr(self, "_rocket_btn", None):
-            pulse_widget(self._rocket_btn, self._t().highlight, self._t().primary)
         self._busy = True
         self._show("log")
         self._log_msg("[INFO] System Refresh — allow UAC (needed for RAM purge)...")
@@ -1116,14 +1169,15 @@ class NazmulApp(ctk.CTk):
             self._build_desktop_menu_offer(self._desktop_menu_host)
 
     def _refresh_tweak_back_panel(self):
-        if getattr(self, "_tweak_back_host", None) and self._tweak_back_host.winfo_exists():
-            self._build_tweak_back_panel(self._tweak_back_host)
+        host = getattr(self, "_sidebar_tweak_host", None)
+        if host and host.winfo_exists():
+            self._build_tweak_back_panel(host, compact=True)
 
     def _tweak_batch_done(self):
         self._busy = False
         self._refresh_tweak_back_panel()
 
-    def _build_tweak_back_panel(self, parent):
+    def _build_tweak_back_panel(self, parent, compact: bool = False):
         for w in parent.winfo_children():
             w.destroy()
         self._tweak_back_checks.clear()
@@ -1136,47 +1190,51 @@ class NazmulApp(ctk.CTk):
         )
 
         card = ctk.CTkFrame(
-            parent, fg_color=t.card, corner_radius=14,
-            border_width=2, border_color=t.warning if hist else t.card_border,
+            parent, fg_color=t.card, corner_radius=12,
+            border_width=1, border_color=t.warning if hist else t.card_border,
         )
-        card.pack(fill="both", expand=True)
+        card.pack(fill="x")
 
-        ctk.CTkLabel(card, text="↩ Tweak Back", font=FONT_HEADING,
-                     text_color=t.text).pack(anchor="w", padx=14, pady=(14, 2))
+        hdr = ctk.CTkFrame(card, fg_color="transparent")
+        hdr.pack(fill="x", padx=10, pady=(8, 2))
+        ctk.CTkLabel(hdr, text="↩ Tweak Back", font=FONT_HEADING,
+                     text_color=t.text).pack(side="left")
         ctk.CTkLabel(
-            card,
-            text="Check tweaks to revert — uncheck to keep.",
+            hdr, text=f"{len(hist)}" if hist else "0",
             font=FONT_SMALL, text_color=t.text_muted,
-        ).pack(anchor="w", padx=14, pady=(0, 8))
+            fg_color=t.btn_secondary, corner_radius=10, width=28, height=22,
+        ).pack(side="right")
 
         if not hist:
             ctk.CTkLabel(
-                card, text="No tweaks applied yet on this PC.",
+                card, text="No tweaks applied yet.",
                 font=FONT_SMALL, text_color=t.text_muted,
-            ).pack(anchor="w", padx=14, pady=(0, 14))
+            ).pack(anchor="w", padx=10, pady=(0, 10))
             return
 
+        list_h = 120 if compact else min(280, 32 * len(hist) + 12)
         list_box = ctk.CTkScrollableFrame(
-            card, fg_color=t.input_bg, corner_radius=10,
-            height=min(280, 36 * len(hist) + 16),
+            card, fg_color=t.input_bg, corner_radius=8,
+            height=list_h,
             scrollbar_button_color=t.primary,
             scrollbar_button_hover_color=t.primary_hover,
         )
-        list_box.pack(fill="both", expand=True, padx=12, pady=(0, 8))
+        list_box.pack(fill="x", padx=8, pady=(2, 6))
 
+        font = ("Segoe UI", 10) if compact else FONT_SMALL
         for entry in hist:
             tid = entry.get("id", "")
             name = entry.get("name", tid)
             can_undo = tid and tid not in NO_UNDO_IDS and bool(get_undo_script(tid))
-            row = ctk.CTkFrame(list_box, fg_color="transparent")
-            row.pack(fill="x", pady=2)
-            label = name if can_undo else f"{name} (manual only)"
+            if compact and len(name) > 26:
+                name = name[:24] + "…"
+            label = name if can_undo else f"{name} (manual)"
             cb = ctk.CTkCheckBox(
-                row, text=label, font=FONT_SMALL, text_color=t.text,
+                list_box, text=label, font=font, text_color=t.text,
                 fg_color=t.primary, hover_color=t.primary_hover,
-                border_color=t.card_border,
+                border_color=t.card_border, height=22,
             )
-            cb.pack(anchor="w", padx=8, pady=4)
+            cb.pack(anchor="w", padx=6, pady=2)
             if can_undo:
                 cb.select()
                 self._tweak_back_checks[tid] = cb
@@ -1184,14 +1242,14 @@ class NazmulApp(ctk.CTk):
                 cb.configure(state="disabled")
 
         btn_row = ctk.CTkFrame(card, fg_color="transparent")
-        btn_row.pack(fill="x", padx=12, pady=(0, 14))
-        secondary_btn(btn_row, "All", lambda: self._tweak_back_select(True), t, width=52).pack(
-            side="left", padx=(0, 4))
-        secondary_btn(btn_row, "None", lambda: self._tweak_back_select(False), t, width=58).pack(
-            side="left", padx=4)
+        btn_row.pack(fill="x", padx=8, pady=(0, 8))
+        secondary_btn(btn_row, "All", lambda: self._tweak_back_select(True), t, width=44).pack(
+            side="left", padx=(0, 3))
+        secondary_btn(btn_row, "None", lambda: self._tweak_back_select(False), t, width=48).pack(
+            side="left", padx=3)
         colored_btn(
-            btn_row, "Revert Checked", self._revert_checked_tweaks, t, t.warning,
-            width=130, height=32,
+            btn_row, "Revert", self._revert_checked_tweaks, t, t.warning,
+            width=88 if compact else 130, height=28,
         ).pack(side="right")
 
     def _tweak_back_select(self, state: bool):

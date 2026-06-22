@@ -106,7 +106,7 @@ THEMES = {
     "light": LIGHT,
 }
 THEME_ORDER = ["midnight", "emerald", "ocean", "slate", "light"]
-DEFAULT_THEME = MIDNIGHT
+DEFAULT_THEME = LIGHT
 
 FONT_TITLE = ("Segoe UI", 22, "bold")
 FONT_HEADING = ("Segoe UI", 14, "bold")

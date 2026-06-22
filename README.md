@@ -19,12 +19,11 @@
 
 ---
 
-## Project purpose | উদ্দেশ্য
+## Project purpose
 
-> **সংক্ষেপে:** সাধারণ মানুষের Windows PC **দ্রুত, পরিষ্কার ও সহজ** রাখা — এক ক্লিকে, বিনা ইনস্টল, ১০০% ফ্রি।  
-> **In short:** Help everyday users **speed up, clean, and fix** Windows 10/11 — no tech skills needed.
+> Help everyday users **speed up, clean, and fix** Windows 10/11 — one click, no install wizard, 100% free.
 
-Built by **MD Nazmul Hasan** so anyone can tweak, refresh, and restore their PC like pro tools — but simpler.
+Built by **[MD Nazmul Hasan](https://github.com/nazmul-cyber)** so anyone can tweak, refresh, and restore their PC like pro tools — but simpler.
 
 ---
 
@@ -103,14 +102,12 @@ Windows & Office license status. MAS activator shortcuts (Windows 10 + 11).
 ### Fresh Windows Setup
 One-click preset for a new PC — pick recommended tweaks + apps, run full setup.
 
-### Restore Previous Settings
-Tweak history is saved on your PC (survives app restarts):
+### Tweak Back (sidebar)
+Every applied tweak is saved on your PC (survives app restarts). In the **left sidebar**:
 
-| Button | What it does |
-|--------|----------------|
-| **Undo Last Batch** | Revert the most recent tweak apply |
-| **Restore All Recorded** | Undo every tweak this app ever applied on this PC |
-| **Reset Services & Defaults** | Turn SysMain, Windows Search, etc. back on — even without history |
+- Check tweaks you want to **revert** — uncheck to keep
+- **All** / **None** / **Revert** buttons
+- Tweaks without undo scripts show as **(manual)**
 
 ### More
 - **PC Manager** — install/open Microsoft PC Manager  

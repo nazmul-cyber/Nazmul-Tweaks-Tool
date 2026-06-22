@@ -4,26 +4,20 @@ import customtkinter as ctk
 
 
 def fade_page(page_frame, theme, steps=5, interval=30, on_done=None):
-    colors = [theme.nav_active_bg, theme.bg]
-    idx = 0
-
-    def tick():
-        nonlocal idx
-        if idx < len(colors):
-            page_frame.configure(fg_color=colors[idx])
-            idx += 1
-            page_frame.after(interval, tick)
-        elif on_done:
-            on_done()
-
-    tick()
+    """Instant page switch — no fade animation (reduces lag)."""
+    try:
+        page_frame.configure(fg_color=theme.bg)
+    except Exception:
+        pass
+    if on_done:
+        on_done()
 
 
 def animate_card_hover(card, theme, entering=True):
-    if entering:
-        card.configure(border_color=theme.primary, fg_color=theme.card_hover)
-    else:
-        card.configure(border_color=theme.card_border, fg_color=theme.card)
+    try:
+        card.configure(border_color=theme.primary if entering else theme.card_border)
+    except Exception:
+        pass
 
 
 def animate_progress(bar, target=1.0, steps=20, interval=25, on_done=None):

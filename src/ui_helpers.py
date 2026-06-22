@@ -113,8 +113,15 @@ def _scroll_target_from_event(event):
     return None
 
 
+_SCROLL_INSTALLED = False
+
+
 def setup_global_scroll(root, get_scroll_fn):
     """Native wheel scroll — one motion per tick, no stutter."""
+    global _SCROLL_INSTALLED
+    if _SCROLL_INSTALLED:
+        return
+    _SCROLL_INSTALLED = True
 
     def on_scroll(event):
         target = _scroll_target_from_event(event)
@@ -195,6 +202,24 @@ def secondary_btn(parent, text, command, theme: Theme, width=100):
 
 def primary_btn(parent, text, command, theme: Theme, color, width=120):
     return colored_btn(parent, text, command, theme, color, width=width)
+
+
+def info_badge(parent, tag: str, value: str, theme: Theme, command=None, accent: str | None = None):
+    """Compact two-part badge button (README shield style)."""
+    wrap = ctk.CTkFrame(parent, fg_color="transparent")
+    tag_lbl = ctk.CTkLabel(
+        wrap, text=tag, font=("Segoe UI", 9, "bold"), text_color="#FFFFFF",
+        fg_color=theme.text_muted, corner_radius=6, width=58, height=22,
+    )
+    tag_lbl.pack(side="left")
+    val_color = accent or theme.primary
+    val_lbl = ctk.CTkButton(
+        wrap, text=value, font=("Segoe UI", 9, "bold"), width=58, height=22,
+        corner_radius=6, fg_color=val_color, hover_color=theme.primary_hover,
+        text_color="#FFFFFF", command=command or (lambda: None),
+    )
+    val_lbl.pack(side="left", padx=(2, 0))
+    return wrap, val_lbl
 
 
 def category_chips(parent, categories, variable, command, theme: Theme):

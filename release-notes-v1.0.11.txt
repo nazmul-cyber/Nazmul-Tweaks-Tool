@@ -1,0 +1,19 @@
+Sidebar redesign, new logo, performance polish.
+
+**Sidebar**
+- Tweak Back moved to left sidebar with check/uncheck revert list
+- GitHub profile avatar button (links to nazmul-cyber)
+- 4 info badges: Release, Download, Size (~19 MB), MIT License
+- Prominent "Check for Updates" button
+
+**Logo**
+- New Windows optimizer logo (gear + broom + Windows icon)
+
+**Performance**
+- Removed page fade and pulse animations
+- Lighter card hover (border only)
+- CPU/RAM/GPU poll every 6s with overlap guard
+- Default Light theme restored
+
+**Home**
+- Desktop right-click menu card is full width (Tweak Back lives in sidebar)
