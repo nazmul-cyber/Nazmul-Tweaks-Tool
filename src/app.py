@@ -24,11 +24,13 @@ from executor import (
 from session_history import get_last_session, has_last_session
 from animations import animate_progress, fade_page, animate_card_hover, pulse_widget, click_bounce
 from color_log import ColorLog
+from version import APP_VERSION
+from updater import check_for_updates, download_update, launch_update, EXE_URL
 from ui_helpers import (
     make_scroll, secondary_btn, primary_btn, category_chips, colored_btn,
     get_install_command, get_install_script_path,
     get_refresh_script_path, get_install_command, setup_global_scroll, apply_theme_live,
-    launch_elevated_ps1, launch_public_install, launch_mas, launch_mas_action,
+    launch_elevated_ps1, launch_public_install, launch_update_script, launch_mas, launch_mas_action,
     launch_elevated_tweak_scripts, sync_scroll_frame_width,
 )
 
@@ -39,7 +41,7 @@ CONFIG_PATH.parent.mkdir(exist_ok=True)
 class NazmulApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("Nazmul Tweaks Tool")
+        self.title(f"Nazmul Tweaks Tool v{APP_VERSION}")
         self.geometry("1180x760")
         self.minsize(960, 640)
 
@@ -68,6 +70,7 @@ class NazmulApp(ctk.CTk):
         self._build_all()
         self._setup_boost_menu()
         self._show("home", animate=False)
+        self.after(6000, self._check_updates_silent)
 
     def _load_pref(self, key, default):
         try:
@@ -372,6 +375,17 @@ class NazmulApp(ctk.CTk):
         )
         self._theme_menu.pack(fill="x")
         self._theme_menu.set(t.label)
+
+        ver_box = ctk.CTkFrame(sb, fg_color="transparent")
+        ver_box.pack(fill="x", padx=12, pady=(0, 8))
+        self._version_label = ctk.CTkLabel(
+            ver_box, text=f"v{APP_VERSION}", font=FONT_SMALL, text_color=t.text_muted,
+        )
+        self._version_label.pack(anchor="w", pady=(0, 4))
+        colored_btn(
+            ver_box, "Check for updates", self._check_updates, t, t.primary,
+            width=200, height=30,
+        ).pack(fill="x")
 
         admin_ok = is_admin()
         mode_txt = "Admin mode" if admin_ok else "Standard — UAC on Apply"
@@ -1258,6 +1272,94 @@ class NazmulApp(ctk.CTk):
             on_done=lambda: (setattr(self, "_busy", False), self._toast("Razer Cortex install done", self._t().success)),
             kind="app",
         )
+
+    def _check_updates_silent(self):
+        if self._busy:
+            return
+
+        def worker():
+            info = check_for_updates()
+            if info.get("error") or not info.get("update_available"):
+                return
+            latest = info.get("latest", "")
+            self.after(
+                0,
+                lambda: self._toast(f"Update available: v{latest} — click Check for updates", self._t().accent),
+            )
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _check_updates(self):
+        if self._busy:
+            self._toast("Please wait — another task is running", self._t().warning)
+            return
+        self._toast("Checking for updates...", self._t().primary)
+
+        def worker():
+            info = check_for_updates()
+            self.after(0, lambda: self._show_update_result(info))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _show_update_result(self, info: dict):
+        if info.get("error"):
+            messagebox.showerror(
+                "Update Check Failed",
+                f"Could not reach GitHub.\n\n{info['error']}\n\nTry again later or download manually.",
+            )
+            return
+        latest = info.get("latest", APP_VERSION)
+        if not info.get("update_available"):
+            messagebox.showinfo(
+                "Up to Date",
+                f"You have the latest version (v{APP_VERSION}).",
+            )
+            return
+        notes = (info.get("notes") or "").strip()
+        if len(notes) > 280:
+            notes = notes[:277] + "..."
+        extra = f"\n\n{notes}" if notes else ""
+        if messagebox.askyesno(
+            "Update Available",
+            f"A new version is available.\n\n"
+            f"Installed: v{APP_VERSION}\n"
+            f"Latest: v{latest}{extra}\n\n"
+            "Download and restart now?",
+        ):
+            self._download_and_apply_update()
+
+    def _download_and_apply_update(self):
+        self._show("log")
+        self._busy = True
+        self._log_msg(f"[INFO] Downloading v-latest from GitHub...")
+        self._log_msg(f"[INFO] {EXE_URL}")
+
+        def worker():
+            path = download_update(log=self._log_msg)
+            self._busy = False
+            if not path:
+                self.after(0, lambda: messagebox.showerror(
+                    "Update Failed",
+                    "Download failed. Check the log or use:\n"
+                    "iex (iwr -useb .../scripts/update.ps1)",
+                ))
+                return
+
+            def restart():
+                if messagebox.askyesno(
+                    "Update Ready",
+                    f"Downloaded to:\n{path}\n\nOpen the new version now?",
+                ):
+                    if launch_update(path):
+                        self.destroy()
+                    else:
+                        messagebox.showinfo("Update", f"Open this file manually:\n{path}")
+                else:
+                    self._toast("Update saved in TEMP folder", self._t().success)
+
+            self.after(0, restart)
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def _run_install(self):
         self._show("log")

@@ -19,6 +19,11 @@ iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool
 
 First time: downloads ~19 MB to temp, then opens. Next time: opens faster (cached in temp).
 
+**Updates:** Inside the app → sidebar → **Check for updates** (or force refresh):
+```powershell
+iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/update.ps1)
+```
+
 > Security popup **Unknown Publisher**? Click **Run** — normal for free unsigned software.
 
 ---

@@ -1,0 +1,12 @@
+Check for updates + smoother fullscreen resize.
+
+**New**
+- Sidebar → **Check for updates** (compares with GitHub Releases)
+- Auto notification after 6 seconds if a newer version exists
+- One-click download + restart for updates
+- Force-update script: `iex (iwr -useb .../scripts/update.ps1)`
+
+**Fix**
+- UI no longer clips when maximizing the window
+
+Open: `iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/open.ps1)`

@@ -318,6 +318,11 @@ OPEN_SCRIPT_URL = (
     "Nazmul-Tweaks-Tool/main/scripts/open.ps1"
 )
 
+UPDATE_SCRIPT_URL = (
+    "https://raw.githubusercontent.com/nazmul-cyber/"
+    "Nazmul-Tweaks-Tool/main/scripts/update.ps1"
+)
+
 
 def get_install_command() -> str:
     return f"iex (iwr -useb {OPEN_SCRIPT_URL})"
@@ -329,6 +334,23 @@ def launch_public_install() -> bool:
     import sys
 
     inner = f"iex (iwr -useb '{OPEN_SCRIPT_URL}')"
+    flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+    try:
+        subprocess.Popen(
+            ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", inner],
+            creationflags=flags,
+        )
+        return True
+    except Exception:
+        return False
+
+
+def launch_update_script() -> bool:
+    """Force-download latest EXE via update.ps1."""
+    import subprocess
+    import sys
+
+    inner = f"iex (iwr -useb '{UPDATE_SCRIPT_URL}')"
     flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
     try:
         subprocess.Popen(

@@ -12,7 +12,7 @@ SRC = ROOT / "src"
 
 # Bundle as Python modules (NOT --add-data) so stdlib imports work in frozen EXE.
 HIDDEN_IMPORTS = [
-    "app", "executor", "themes", "tweaks", "apps", "paths",
+    "app", "executor", "themes", "tweaks", "apps", "paths", "version", "updater",
     "ui_helpers", "animations", "color_log", "resource_bar", "session_history",
     "customtkinter", "PIL", "PIL._tkinter_finder", "PIL.Image", "PIL.ImageTk",
     "darkdetect", "uuid", "winreg", "ctypes", "json", "threading", "tempfile",
