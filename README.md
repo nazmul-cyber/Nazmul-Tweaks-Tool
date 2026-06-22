@@ -10,11 +10,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest"><img src="https://img.shields.io/github/v/release/nazmul-cyber/Nazmul-Tweaks-Tool?label=release&style=for-the-badge" alt="Release"></a>
-  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe"><img src="https://img.shields.io/badge/Download-EXE-0D9488?style=for-the-badge" alt="Download"></a>
-  <img src="https://img.shields.io/badge/Windows-10%2F11-0078D6?style=for-the-badge" alt="Windows">
-  <img src="https://img.shields.io/badge/Size-~19%20MB-teal?style=for-the-badge" alt="Size">
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT">
+  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest">v1.0.15</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe">Download</a>
+  &nbsp;·&nbsp;
+  ~19 MB
+  &nbsp;·&nbsp;
+  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/blob/main/LICENSE">MIT License</a>
 </p>
 
 ---
@@ -112,7 +114,7 @@ Every applied tweak is saved on your PC (survives app restarts). Open **Tweak Ba
 
 ### More
 - **PC Manager** — install/open Microsoft PC Manager  
-- **6 themes** — Light, Slate, Ocean, and more  
+- **Light theme** — clean, fast UI
 - **Live CPU / RAM / GPU** bars in sidebar  
 - **Check for updates** — built-in GitHub release checker  
 - **Activity log** — color-coded output  

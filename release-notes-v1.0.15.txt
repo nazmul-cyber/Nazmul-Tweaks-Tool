@@ -1,0 +1,10 @@
+Cleaner sidebar + simpler GitHub README links.
+
+**App sidebar**
+- Light theme only (no theme picker)
+- Removed badge buttons and Check for Updates from sidebar
+- Silent update check still runs in background
+
+**README**
+- Simple text links: Version · Download · ~19 MB · MIT License
+- Removed extra Windows badge row
