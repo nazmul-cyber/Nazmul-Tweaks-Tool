@@ -1515,7 +1515,10 @@ class NazmulApp(ctk.CTk):
             latest = info.get("latest", "")
             self.after(
                 0,
-                lambda: self._toast(f"Update available: v{latest} — click Check for updates", self._t().accent),
+                lambda: self._toast(
+                    f"Update available: v{latest} (you have v{APP_VERSION}) — click Check for Updates",
+                    self._t().warning,
+                ),
             )
 
         threading.Thread(target=worker, daemon=True).start()

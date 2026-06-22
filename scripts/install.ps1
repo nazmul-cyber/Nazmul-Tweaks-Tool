@@ -2,8 +2,10 @@
 $ErrorActionPreference = "Stop"
 
 $ReleaseUrl = "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe"
+$ApiUrl     = "https://api.github.com/repos/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest"
 $InstallDir = "$env:LOCALAPPDATA\NazmulTweaksTool"
 $ExePath    = "$InstallDir\Nazmul Tweaks Tool.exe"
+$VerFile    = "$InstallDir\version.txt"
 
 function Write-NT($msg, $color) {
     Write-Host "  [NT] $msg" -ForegroundColor $color
@@ -25,12 +27,32 @@ if ([version]$os.Version -lt [version]"10.0") {
 
 New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
 
-Write-NT "Downloading Nazmul Tweaks Tool..." "Cyan"
+$latest = $null
 try {
-    if (Get-Command Start-BitsTransfer -ErrorAction SilentlyContinue) {
-        Start-BitsTransfer -Source $ReleaseUrl -Destination $ExePath -Description "Nazmul Tweaks Tool"
-    } else {
-        Invoke-WebRequest -Uri $ReleaseUrl -OutFile $ExePath -UseBasicParsing -TimeoutSec 600
+    $rel = Invoke-RestMethod -Uri $ApiUrl -Headers @{"User-Agent" = "Nazmul-Tweaks-Tool-Install"} -TimeoutSec 20
+    $latest = ($rel.tag_name -replace '^v', '').Trim()
+} catch { }
+
+$needs = $true
+if ((Test-Path $ExePath) -and (Get-Item $ExePath).Length -gt 500000 -and (Test-Path $VerFile) -and $latest) {
+    $cached = (Get-Content $VerFile -Raw).Trim()
+    if ($cached -eq $latest) {
+        $needs = $false
+        Write-NT "Already installed v$latest — opening..." "Green"
+    }
+}
+
+if ($needs) {
+    Write-NT "Downloading Nazmul Tweaks Tool$(if ($latest) { " v$latest" })..." "Cyan"
+}
+try {
+    if ($needs) {
+        if (Get-Command Start-BitsTransfer -ErrorAction SilentlyContinue) {
+            Start-BitsTransfer -Source $ReleaseUrl -Destination $ExePath -Description "Nazmul Tweaks Tool"
+        } else {
+            Invoke-WebRequest -Uri $ReleaseUrl -OutFile $ExePath -UseBasicParsing -TimeoutSec 600
+        }
+        if ($latest) { Set-Content -Path $VerFile -Value $latest -Encoding UTF8 -NoNewline }
     }
 } catch {
     Write-NT "Download failed: $($_.Exception.Message)" "Red"

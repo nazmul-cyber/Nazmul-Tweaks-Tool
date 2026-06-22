@@ -1,0 +1,16 @@
+Fix: open.ps1 no longer uses stale cached EXE.
+
+**Problem**
+- `open.ps1` kept old `%TEMP%\Nazmul-Tweaks-Tool.exe` forever
+- Users never saw v1.0.11 / v1.0.12 UI changes
+
+**Fix**
+- `open.ps1` checks GitHub latest version every launch
+- Re-downloads EXE when a newer release exists
+- `update.ps1` and in-app download write version stamp file
+- `install.ps1` also checks version before skipping download
+
+**Get latest now**
+```powershell
+iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/update.ps1)
+```

@@ -70,10 +70,14 @@ def download_update(
         if log:
             log(msg)
 
-    target = dest or (Path(tempfile.gettempdir()) / "Nazmul-Tweaks-Tool-new.exe")
+    temp_dir = Path(tempfile.gettempdir())
+    target = dest or (temp_dir / "Nazmul-Tweaks-Tool.exe")
+    ver_file = temp_dir / "nazmul-tweaks-version.txt"
     target.parent.mkdir(parents=True, exist_ok=True)
     _log(f"[INFO] Downloading update to {target}...")
     try:
+        info = check_for_updates(timeout=min(timeout, 20))
+        latest = info.get("latest") or APP_VERSION
         req = urllib.request.Request(
             EXE_URL,
             headers={"User-Agent": f"Nazmul-Tweaks-Tool/{APP_VERSION}"},
@@ -83,8 +87,17 @@ def download_update(
         if len(data) < 500_000:
             _log("[ERR] Download too small — update failed")
             return None
+        if target.exists():
+            try:
+                target.unlink()
+            except OSError:
+                target = temp_dir / "Nazmul-Tweaks-Tool-new.exe"
         target.write_bytes(data)
-        _log(f"[OK] Downloaded {len(data) // (1024 * 1024)} MB")
+        try:
+            ver_file.write_text(latest, encoding="utf-8")
+        except OSError:
+            pass
+        _log(f"[OK] Downloaded v{latest} ({len(data) // (1024 * 1024)} MB)")
         return target
     except Exception as exc:
         _log(f"[ERR] Download failed: {exc}")
