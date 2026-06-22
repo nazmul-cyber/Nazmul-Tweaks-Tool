@@ -15,6 +15,6 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-powershell -NoProfile -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('GPU, RAM, and Windows refreshed! Your apps are still open.','System Refresh',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null"
+powershell -NoProfile -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Graphics, Windows shell, and RAM refreshed! Your apps are still open.','System Refresh',[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null"
 
 exit /b 0

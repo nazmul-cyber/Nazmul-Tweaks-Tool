@@ -73,77 +73,27 @@ def apply_theme_live(root: tk.Misc, old: Theme, new: Theme) -> None:
     walk(root)
 
 
-def delta_to_pixels(delta: int) -> float:
-    """Map wheel delta to pixels — matches Windows trackpad + mouse feel."""
+def delta_to_scroll_units(delta: int) -> int:
+    """Map wheel delta to scroll units — one clean step per tick."""
     if delta == 0:
-        return 0.0
+        return 0
     if abs(delta) < 120:
-        return -delta * 0.55
-    return -delta / 2.4
+        return -1 if delta > 0 else 1
+    return int(round(-delta / 36))
 
 
-class SmoothScrollEngine:
-    """Windows-style smooth scroll with pixel steps and easing."""
-
-    FRAME_MS = 8
-    EASE = 0.28
-    MIN_STEP = 0.35
-
-    def __init__(self, root: tk.Misc):
-        self._root = root
-        self._states: dict[int, dict] = {}
-
-    def _key(self, widget) -> int:
-        return id(widget)
-
-    def impulse(self, widget, delta: int) -> bool:
-        px = delta_to_pixels(delta)
-        if abs(px) < 0.01:
-            return False
-        key = self._key(widget)
-        state = self._states.get(key)
-        if state is None:
-            state = {"widget": widget, "pending": 0.0, "job": None}
-            self._states[key] = state
-        state["pending"] += px
-        if state["job"] is None:
-            state["job"] = self._root.after(self.FRAME_MS, lambda k=key: self._tick(k))
+def native_scroll_widget(widget, delta: int) -> bool:
+    """Immediate unit scroll (no chunked pixel animation)."""
+    units = delta_to_scroll_units(delta)
+    if units == 0:
+        return False
+    try:
+        widget.yview_scroll(units, "units")
         return True
-
-    def _tick(self, key: int):
-        state = self._states.get(key)
-        if not state:
-            return
-        state["job"] = None
-        pending = state["pending"]
-        if abs(pending) < self.MIN_STEP:
-            state["pending"] = 0.0
-            return
-
-        step = pending * self.EASE
-        if abs(step) < 1.0:
-            step = pending
-            state["pending"] = 0.0
-        else:
-            state["pending"] = pending - step
-
-        self._scroll_pixels(state["widget"], step)
-        state["job"] = self._root.after(self.FRAME_MS, lambda k=key: self._tick(k))
-
-    @staticmethod
-    def _scroll_pixels(widget, pixels: float):
-        amount = int(round(pixels))
-        if amount == 0:
-            amount = 1 if pixels > 0 else -1
-        try:
-            widget.yview_scroll(amount, "pixels")
-        except tk.TclError:
-            try:
-                widget.yview_scroll(amount, "units")
-            except Exception:
-                pass
-        except Exception:
-            pass
+    except tk.TclError:
+        return False
+    except Exception:
+        return False
 
 
 def _scroll_target_from_event(event):
@@ -164,9 +114,7 @@ def _scroll_target_from_event(event):
 
 
 def setup_global_scroll(root, get_scroll_fn):
-    """Smooth Windows-like scroll for all pages."""
-    engine = SmoothScrollEngine(root)
-    root._smooth_scroll_engine = engine
+    """Native wheel scroll — one motion per tick, no stutter."""
 
     def on_scroll(event):
         target = _scroll_target_from_event(event)
@@ -174,33 +122,24 @@ def setup_global_scroll(root, get_scroll_fn):
             scroll_frame = get_scroll_fn()
             if scroll_frame and hasattr(scroll_frame, "_parent_canvas"):
                 target = scroll_frame._parent_canvas
-        if target:
-            engine.impulse(target, event.delta)
+        if target and native_scroll_widget(target, event.delta):
+            return "break"
 
     root.bind_all("<MouseWheel>", on_scroll, add="+")
-    root.bind_all("<Button-4>", lambda e: on_scroll(type("E", (), {"widget": e.widget, "delta": 120})()), add="+")
-    root.bind_all("<Button-5>", lambda e: on_scroll(type("E", (), {"widget": e.widget, "delta": -120})()), add="+")
-
-
-def smooth_scroll_widget(widget, event, root: tk.Misc | None = None):
-    """Smooth-scroll a canvas or text widget (e.g. activity log)."""
-    r = root or widget.winfo_toplevel()
-    engine = getattr(r, "_smooth_scroll_engine", None)
-    if engine is None:
-        engine = SmoothScrollEngine(r)
-        r._smooth_scroll_engine = engine
-    return engine.impulse(widget, event.delta)
-
-
-def scroll_amount(delta: int) -> int:
-    """Legacy helper — prefer smooth_scroll_widget."""
-    return int(round(delta_to_pixels(delta)))
+    root.bind_all(
+        "<Button-4>",
+        lambda e: on_scroll(type("E", (), {"widget": e.widget, "delta": 120})()),
+        add="+",
+    )
+    root.bind_all(
+        "<Button-5>",
+        lambda e: on_scroll(type("E", (), {"widget": e.widget, "delta": -120})()),
+        add="+",
+    )
 
 
 def scroll_widget(scroll_frame, event):
-    root = scroll_frame.winfo_toplevel()
-    canvas = scroll_frame._parent_canvas
-    return smooth_scroll_widget(canvas, event, root)
+    return native_scroll_widget(scroll_frame._parent_canvas, event.delta)
 
 
 def sync_scroll_frame_width(scroll_frame) -> None:

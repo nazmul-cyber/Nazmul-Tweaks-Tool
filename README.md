@@ -19,6 +19,15 @@
 
 ---
 
+## Project purpose | উদ্দেশ্য
+
+> **সংক্ষেপে:** সাধারণ মানুষের Windows PC **দ্রুত, পরিষ্কার ও সহজ** রাখা — এক ক্লিকে, বিনা ইনস্টল, ১০০% ফ্রি।  
+> **In short:** Help everyday users **speed up, clean, and fix** Windows 10/11 — no tech skills needed.
+
+Built by **MD Nazmul Hasan** so anyone can tweak, refresh, and restore their PC like pro tools — but simpler.
+
+---
+
 ## What is Nazmul Tweaks Tool?
 
 **Nazmul Tweaks Tool** is a portable Windows desktop app that helps everyday users **speed up, clean, and customize** Windows 10/11 — without editing the registry manually or running random scripts.
@@ -79,10 +88,11 @@ Privacy, performance, Explorer, debloat, updates, network, and gaming — organi
 | Gaming | Game Mode, mouse accel, fullscreen opt |
 
 ### System Refresh
-**GPU + RAM + Windows refresh** — your apps stay open.
+**Graphics + Windows shell + RAM refresh** — feels closer to a fresh boot. Apps stay open.
 
-- Click **Refresh Now** inside the app, or  
-- Add **System Refresh** to **desktop right-click** menu  
+- Restarts Explorer, Start menu, DWM (GPU compositor), Themes service  
+- Clears temp, flushes DNS, optimizes RAM  
+- Click **Refresh Now** or add to **desktop right-click** menu
 
 ### Essential Apps (23)
 Install popular apps via **winget** — browsers, 7-Zip, VLC, VS Code, and more. Revert Last uninstalls the previous batch.

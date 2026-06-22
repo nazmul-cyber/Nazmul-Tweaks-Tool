@@ -230,6 +230,60 @@ function Optimize-SystemMemory {
     return $after
 }
 
+function Refresh-WindowsGraphicsAndShell {
+    Log "Refreshing Windows shell & graphics (fresh-boot feel)..." "info"
+
+    $shellCode = @'
+using System;
+using System.Runtime.InteropServices;
+public static class NazmulShell {
+    [DllImport("shell32.dll")]
+    public static extern void SHChangeNotify(uint eventId, uint flags, IntPtr item1, IntPtr item2);
+    public static void RefreshDesktop() {
+        SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+        SHChangeNotify(0x8000000, 0x1000, IntPtr.Zero, IntPtr.Zero);
+    }
+}
+'@
+    try {
+        if (-not ("NazmulShell" -as [type])) { Add-Type -TypeDefinition $shellCode -Language CSharp -ErrorAction Stop }
+        [NazmulShell]::RefreshDesktop()
+        Log "Desktop shell cache refreshed" "ok"
+    } catch {
+        Log "Shell notify skipped" "warn"
+    }
+
+    foreach ($proc in @('StartMenuExperienceHost', 'SearchHost', 'ShellExperienceHost', 'sihost')) {
+        Get-Process -Name $proc -EA 0 | Stop-Process -Force -EA 0
+    }
+    Log "Windows UI helpers restarted (Start/Search/Taskbar)" "ok"
+    Start-Sleep -Milliseconds 700
+
+    foreach ($svc in @('Themes', 'UxSms', 'ShellHWDetection')) {
+        try {
+            Restart-Service -Name $svc -Force -EA Stop
+            Log "Service restarted: $svc" "ok"
+        } catch {}
+    }
+
+    Start-Process "rundll32.exe" -ArgumentList "user32.dll,UpdatePerUserSystemParameters" -WindowStyle Hidden -Wait -EA 0 | Out-Null
+    Log "Display & visual parameters refreshed" "ok"
+
+    Start-Process "ie4uinit.exe" -ArgumentList "-show" -WindowStyle Hidden -Wait -EA 0 | Out-Null
+    Log "Icon cache refreshed" "ok"
+
+    Log "Restarting Explorer (desktop shell)..."
+    Stop-Process -Name explorer -Force -EA 0
+    Start-Sleep -Seconds 2
+    Start-Process explorer
+    Log "Explorer restarted" "ok"
+
+    Log "Refreshing GPU compositor (DWM)..."
+    Stop-Process -Name dwm -Force -EA 0
+    Start-Sleep -Seconds 2
+    Log "Graphics compositor refreshed" "ok"
+}
+
 # ─── Main ───────────────────────────────────────────────────────────
 $statsBefore = Get-Snapshot
 Log "System Refresh starting..." "info"
@@ -251,18 +305,9 @@ $n = 0
 }
 Log "Cleaned $n temp items" "ok"
 
-Log "Restarting Explorer (frees its cache before RAM optimize)..."
-Stop-Process -Name explorer -Force -EA 0
-Start-Sleep -Seconds 2
-Start-Process explorer
-Log "Explorer restarted" "ok"
+Refresh-WindowsGraphicsAndShell
 
-Log "Refreshing display..."
-Stop-Process -Name dwm -Force -EA 0
-Start-Sleep -Seconds 1
-Log "Display/GPU refreshed" "ok"
-
-# RAM optimize LAST — so explorer restart does not eat the gain we measure
+# RAM optimize LAST — shell/GPU refresh runs before we measure RAM gain
 $statsAfterRam = Optimize-SystemMemory -Before $statsBefore
 Start-Sleep -Milliseconds 800
 

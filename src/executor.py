@@ -757,7 +757,7 @@ def run_system_refresh_cli() -> int:
     _ps(
         rf"""
         Add-Type -AssemblyName System.Windows.Forms
-        $m = "Refresh complete!`n`nRAM freed: {freed} MB`nFree now: {after} MB`nApps still open."
+        $m = "Refresh complete!`n`nGraphics + Windows shell refreshed.`nRAM freed: {freed} MB`nFree now: {after} MB`nApps still open."
         [System.Windows.Forms.MessageBox]::Show($m, 'System Refresh') | Out-Null
         """
     )

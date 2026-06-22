@@ -1,0 +1,12 @@
+Smoother scroll + deeper System Refresh + GitHub purpose.
+
+**Fix**
+- Scroll feels natural now (no broken/chunky pixel steps)
+
+**System Refresh**
+- Restarts Windows shell (Explorer, Start, Search, Taskbar helpers)
+- Refreshes Themes, DWM/GPU compositor, icon cache
+- Fresh-boot feel — apps still stay open
+
+**GitHub**
+- Short project purpose (Bangla + English) in README

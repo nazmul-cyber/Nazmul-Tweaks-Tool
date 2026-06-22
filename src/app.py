@@ -280,7 +280,7 @@ class NazmulApp(ctk.CTk):
         refresh_box.pack(fill="x", padx=14, pady=(0, 8))
         ctk.CTkLabel(refresh_box, text="🚀 System Refresh", font=FONT_HEADING,
                      text_color=t.highlight).pack(anchor="w", padx=12, pady=(10, 0))
-        ctk.CTkLabel(refresh_box, text="GPU + RAM + Windows — apps stay open",
+        ctk.CTkLabel(refresh_box, text="Graphics + Windows shell + RAM — apps stay open",
                      font=FONT_SMALL, text_color=t.text_muted).pack(anchor="w", padx=12, pady=(0, 6))
         colored_btn(
             refresh_box, "Fix Now", lambda: self._boost_run(self._system_refresh),
@@ -491,7 +491,7 @@ class NazmulApp(ctk.CTk):
         ctk.CTkLabel(refresh_card, text="🚀", font=("Segoe UI Emoji", 32)).pack(pady=(14, 0))
         ctk.CTkLabel(refresh_card, text="System Refresh", font=FONT_HEADING,
                      text_color=self._t().highlight).pack()
-        ctk.CTkLabel(refresh_card, text="GPU + RAM + Windows — apps stay open",
+        ctk.CTkLabel(refresh_card, text="Graphics + Windows shell + RAM — apps stay open",
                      font=FONT_SMALL, text_color=self._t().text_muted).pack(pady=(0, 4))
         self._home_refresh_stats = ctk.CTkLabel(
             refresh_card, text="Run refresh to see RAM / CPU / GPU freed",
@@ -1225,7 +1225,7 @@ class NazmulApp(ctk.CTk):
         add_seg = self._desktop_menu_segment(
             split, t,
             icon="➕", title="Add to Menu",
-            desc="Desktop right-click → System Refresh\nGPU + RAM + Windows — apps stay open.",
+            desc="Desktop right-click → System Refresh\nGraphics + Windows + RAM — apps stay open.",
             note="Ready to add" if not installed else "Already added to Windows menu",
             note_color=t.highlight if not installed else t.success,
             btn_text="Add to Windows Menu",
