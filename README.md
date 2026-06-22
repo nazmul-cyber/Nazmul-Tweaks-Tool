@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Free, open-source Windows optimizer for everyone.</strong><br>
-  One PowerShell line → app opens. No install wizard. No Python needed.
+  One PowerShell line → app opens. Portable EXE or Inno installer. No Python needed.
 </p>
 
 <p align="center">
@@ -23,7 +23,7 @@
 
 ## Project purpose
 
-> Help everyday users **speed up, clean, and fix** Windows 10/11 — one click, no install wizard, 100% free.
+> Help everyday users **speed up, clean, and fix** Windows 10/11 — one click, 100% free, English-only UI.
 
 Built by **[MD Nazmul Hasan](https://github.com/nazmul-cyber)** so anyone can tweak, refresh, and restore their PC like pro tools — but simpler.
 
@@ -37,7 +37,7 @@ Inspired by **Chris Titus WinUtil**: copy one line in PowerShell, the app window
 
 | | |
 |---|---|
-| **Type** | Portable `.exe` (~19 MB) — no installer |
+| **Type** | Portable `.exe` (~19 MB) or Inno Setup installer (~21 MB) |
 | **Works on** | Windows 10 & 11 |
 | **Admin** | Some tweaks need UAC (one prompt per batch) |
 | **Cost** | 100% free · MIT License |
@@ -60,17 +60,20 @@ iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool
 
 ---
 
-## Or download EXE once
+## Download
 
 <p align="center">
-  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe">
+  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest">
     <img src="assets/nazmul-tweaks-tool.png" alt="Nazmul Tweaks Tool preview" width="300">
   </a>
 </p>
 
-**Direct link:** https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
+| | Link |
+|---|---|
+| **Installer (recommended)** | [Nazmul-Tweaks-Tool-Setup-v1.0.18.exe](https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/download/v1.0.18/Nazmul-Tweaks-Tool-Setup-v1.0.18.exe) |
+| **Portable EXE** | [Nazmul-Tweaks-Tool.exe](https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe) |
 
-Double-click. No install wizard.
+Installer puts the app in `%LOCALAPPDATA%\NazmulTweaksTool` with optional desktop shortcut.
 
 ---
 
@@ -105,19 +108,20 @@ Windows & Office license status. MAS activator shortcuts (Windows 10 + 11).
 One-click preset for a new PC — pick recommended tweaks + apps, run full setup.
 
 ### Tweak Back
-Every applied tweak is saved on your PC (survives app restarts). Open **Tweak Back** in the sidebar — same list style as Tweaks:
+Open **↩ Tweak Back** in the sidebar — full tweak list, same style as the Tweaks page:
 
-- Shows only tweaks you already applied (icon, name, description)
+- All tweaks listed with icon, name, and description
 - Check to **revert** — uncheck to keep
+- Applied tweaks are pre-checked
 - Category filters, **All** / **None** / **Revert Checked**
-- Tweaks without undo scripts show as **(manual only)**
 
 ### More
 - **PC Manager** — install/open Microsoft PC Manager  
 - **Light theme** — clean, fast UI
+- **Support me ❤️!** — GitHub link in sidebar header
 - **Live CPU / RAM / GPU** bars in sidebar  
-- **Check for updates** — built-in GitHub release checker  
-- **Activity log** — color-coded output  
+- **Check for Updates** — dedicated sidebar button + silent background check
+- **Activity log** — color-coded output
 
 ---
 
@@ -161,6 +165,11 @@ python main.py
 Build EXE:
 ```bat
 python build_exe.py
+```
+
+Build EXE + Inno Setup installer:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build_installer.ps1
 ```
 
 ---
