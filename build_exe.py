@@ -27,6 +27,11 @@ def _format_size(path: Path) -> str:
 def build():
     ensure_logo()
     icon = ASSETS / "logo.ico"
+    # Exclude heavy optional deps PyInstaller pulls via Pillow (numpy ~20MB bloat).
+    excludes = [
+        "numpy", "matplotlib", "pandas", "scipy", "pytest",
+        "setuptools", "distutils", "tkinter.test",
+    ]
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--name", "Nazmul Tweaks Tool",
@@ -42,6 +47,8 @@ def build():
         "--add-data", f"{ROOT / 'data'};data",
         "--add-data", f"{ROOT / 'src'};src",
     ]
+    for mod in excludes:
+        cmd += ["--exclude-module", mod]
     if icon.exists():
         cmd += ["--icon", str(icon)]
     cmd.append(str(ROOT / "main.py"))

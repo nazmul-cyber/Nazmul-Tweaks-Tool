@@ -95,6 +95,29 @@ Nazmul-Tweaks-Tool/
 - winget (Microsoft App Installer)
 - Administrator privileges for tweaks & activation
 
+## Public use — will it work on everyone's PC?
+
+**Yes, for most Windows 10/11 users** — designed for public help. No Python needed if you use the EXE.
+
+| Feature | Works on any PC? | Notes |
+|---------|------------------|-------|
+| **EXE app** | Yes | Windows 10/11, 64-bit |
+| **38 PowerShell tweaks** | Mostly yes | Needs **Run as Admin** (UAC). Registry + built-in Windows commands only — no extra install. |
+| **System Refresh** | Yes | Built-in PowerShell; desktop right-click menu is per-user (HKCU). |
+| **Apps (winget)** | If winget exists | Install **App Installer** from Microsoft Store first (free). |
+| **Activation (MAS)** | Needs internet | Opens official MAS script; user must follow on-screen steps. |
+| **Win11-only tweaks** | Win 11 only | Copilot, Widgets, Classic menu — skipped or no effect on Win 10. |
+
+**Honest limits:** Some tweaks need Administrator. Corporate/school PCs may block registry changes. Always create a **restore point** first. Tweaks use `-ErrorAction SilentlyContinue` where possible so one failure does not break the batch.
+
+### One-line install (share this)
+
+```powershell
+irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1 | iex
+```
+
+Paste in **PowerShell (Admin)**. Downloads ~19 MB EXE via BITS (faster), creates desktop shortcut, launches app.
+
 ## Disclaimer
 
 - Create a system restore point before applying tweaks
