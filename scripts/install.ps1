@@ -1,5 +1,5 @@
 # Nazmul Tweaks Tool - Public One-Line Installer
-# Usage: irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1 | iex
+# Usage: iex (irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1)
 
 $ErrorActionPreference = "Stop"
 

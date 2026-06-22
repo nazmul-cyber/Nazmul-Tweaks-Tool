@@ -296,8 +296,10 @@ def get_refresh_script_path():
 
 
 def get_install_command() -> str:
-    script = get_install_script_path()
-    return f'Set-ExecutionPolicy Bypass -Scope Process -Force; & "{script}"'
+    return (
+        "iex (irm https://raw.githubusercontent.com/nazmul-cyber/"
+        "Nazmul-Tweaks-Tool/main/scripts/install.ps1)"
+    )
 
 
 def _shell_elevate(executable: str, params: str) -> bool:

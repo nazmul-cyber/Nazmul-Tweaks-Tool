@@ -11,10 +11,12 @@ A beautiful, fast Windows optimization tool inspired by [Chris Titus WinUtil](ht
 
 On GitHub, each box below has a **copy button** (top-right corner of the code block). Click it, then paste.
 
+> **Important:** Use `iex (irm ...)` — **not** `irm ... | iex`. The pipe version fails on many PCs with *"empty string"* error.
+
 **Option A — One-line install** (PowerShell **Run as Administrator**):
 
 ```powershell
-irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1 | iex
+iex (irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1)
 ```
 
 **Option B — Direct EXE download link** (paste in browser or share):
@@ -129,7 +131,7 @@ Nazmul-Tweaks-Tool/
 ### One-line install (share this)
 
 ```powershell
-irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1 | iex
+iex (irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1)
 ```
 
 Paste in **PowerShell (Admin)**. Downloads ~19 MB EXE via BITS (faster), creates desktop shortcut, launches app.
