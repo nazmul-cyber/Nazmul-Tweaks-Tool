@@ -29,7 +29,7 @@ from ui_helpers import (
     get_install_command, get_install_script_path,
     get_refresh_script_path, get_install_command, setup_global_scroll, apply_theme_live,
     launch_elevated_ps1, launch_public_install, launch_mas, launch_mas_action,
-    launch_elevated_tweak_scripts,
+    launch_elevated_tweak_scripts, sync_scroll_frame_width,
 )
 
 ASSETS = get_assets()
@@ -59,6 +59,8 @@ class NazmulApp(ctk.CTk):
         self._fresh_checks = {}
         self._resource_bar = None
         self._stats_poll_id = None
+        self._wrap_labels: list[tuple[ctk.CTkLabel, float]] = []
+        self._resize_job = None
 
         ctk.set_appearance_mode(self._theme.ctk_mode)
         self.configure(fg_color=self._theme.bg)
@@ -150,6 +152,7 @@ class NazmulApp(ctk.CTk):
         self._pages.clear()
         self._color_log = None
         self._page_scrolls.clear()
+        self._wrap_labels.clear()
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -179,6 +182,33 @@ class NazmulApp(ctk.CTk):
 
         setup_global_scroll(self, self._active_scroll)
         self._start_resource_poll()
+        self.bind("<Configure>", self._on_root_configure, add="+")
+        self.after_idle(self._finish_resize)
+
+    def _track_wrap(self, label: ctk.CTkLabel, ratio: float = 0.42):
+        self._wrap_labels.append((label, ratio))
+
+    def _on_root_configure(self, event):
+        if event.widget is not self:
+            return
+        if self._resize_job:
+            try:
+                self.after_cancel(self._resize_job)
+            except Exception:
+                pass
+        self._resize_job = self.after(60, self._finish_resize)
+
+    def _finish_resize(self):
+        self._resize_job = None
+        content_w = max(420, self.winfo_width() - 300)
+        for label, ratio in self._wrap_labels:
+            try:
+                label.configure(wraplength=max(160, int(content_w * ratio)))
+            except Exception:
+                pass
+        for scroll in self._page_scrolls.values():
+            sync_scroll_frame_width(scroll)
+        self.update_idletasks()
 
     def _setup_boost_menu(self):
         self._boost_popup = None
@@ -439,6 +469,7 @@ class NazmulApp(ctk.CTk):
             font=FONT_SMALL, text_color=self._t().text_muted, wraplength=220,
         )
         self._home_refresh_stats.pack(pady=(0, 6))
+        self._track_wrap(self._home_refresh_stats, 0.22)
 
         def _do_refresh():
             click_bounce(refresh_card, self._t(), self._t().highlight)
@@ -632,13 +663,15 @@ class NazmulApp(ctk.CTk):
         note_box.pack(fill="x", pady=8)
         ctk.CTkLabel(note_box, text="ℹ  Note", font=FONT_HEADING,
                      text_color=self._t().text).pack(anchor="w", padx=18, pady=(12, 4))
-        ctk.CTkLabel(
+        note_lbl = ctk.CTkLabel(
             note_box,
             text="To install Windows or Office, press E in the MAS menu.\n"
                  "Genuine Windows and Office official licenses can be obtained from Microsoft.",
             font=FONT_SMALL, text_color=self._t().text_muted, justify="left",
             wraplength=720,
-        ).pack(anchor="w", padx=18, pady=(0, 14))
+        )
+        note_lbl.pack(anchor="w", padx=18, pady=(0, 14))
+        self._track_wrap(note_lbl, 0.9)
 
         mas = ctk.CTkFrame(body, fg_color=self._t().card, corner_radius=12,
                            border_width=1, border_color=self._t().card_border)
@@ -834,8 +867,10 @@ class NazmulApp(ctk.CTk):
         if rec:
             cb.select()
         self._checkboxes[key] = cb
-        ctk.CTkLabel(row, text=desc, font=FONT_SMALL, text_color=t.text_muted,
-                     wraplength=400, justify="left").pack(side="left", padx=6, pady=8)
+        desc_lbl = ctk.CTkLabel(row, text=desc, font=FONT_SMALL, text_color=t.text_muted,
+                                wraplength=400, justify="left")
+        desc_lbl.pack(side="left", padx=6, pady=8)
+        self._track_wrap(desc_lbl, 0.55)
 
     def _show(self, key: str, animate: bool = True):
         old_key = self._page_key
@@ -1043,10 +1078,12 @@ class NazmulApp(ctk.CTk):
         seg.grid_columnconfigure(0, weight=1)
         ctk.CTkLabel(seg, text=icon, font=("Segoe UI Emoji", 22)).pack(anchor="w", padx=14, pady=(12, 0))
         ctk.CTkLabel(seg, text=title, font=FONT_HEADING, text_color=t.text).pack(anchor="w", padx=14, pady=(2, 2))
-        ctk.CTkLabel(
+        desc_lbl = ctk.CTkLabel(
             seg, text=desc, font=FONT_SMALL, text_color=t.text_muted,
             justify="left", wraplength=240,
-        ).pack(anchor="w", padx=14, pady=(0, 6))
+        )
+        desc_lbl.pack(anchor="w", padx=14, pady=(0, 6))
+        self._track_wrap(desc_lbl, 0.2)
         ctk.CTkLabel(seg, text=note, font=FONT_SMALL, text_color=note_color).pack(anchor="w", padx=14, pady=(0, 8))
         btn = colored_btn(seg, btn_text, command, t, btn_color, width=168, height=36)
         btn.pack(anchor="w", padx=14, pady=(0, 14))

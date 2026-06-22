@@ -36,8 +36,22 @@ def show_error(msg: str):
         print(msg, file=sys.stderr)
 
 
+def _enable_dpi_awareness():
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except Exception:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
+
+
 def run_app():
     log("Starting Nazmul Tweaks Tool...")
+    _enable_dpi_awareness()
     try:
         import customtkinter as ctk
         from app import NazmulApp

@@ -203,14 +203,32 @@ def scroll_widget(scroll_frame, event):
     return smooth_scroll_widget(canvas, event, root)
 
 
+def sync_scroll_frame_width(scroll_frame) -> None:
+    """Keep CTkScrollableFrame canvas width in sync after window resize/maximize."""
+    try:
+        w = scroll_frame.winfo_width()
+        if w > 40:
+            scroll_frame._parent_canvas.configure(width=w)
+            scroll_frame._parent_frame.update_idletasks()
+    except Exception:
+        pass
+
+
 def make_scroll(parent, theme: Theme, **kw) -> ctk.CTkScrollableFrame:
-    return ctk.CTkScrollableFrame(
+    frame = ctk.CTkScrollableFrame(
         parent,
         fg_color="transparent",
         scrollbar_button_color=theme.primary,
         scrollbar_button_hover_color=theme.primary_hover,
         **kw,
     )
+
+    def _on_configure(event):
+        if event.width > 40:
+            sync_scroll_frame_width(frame)
+
+    frame.bind("<Configure>", _on_configure, add="+")
+    return frame
 
 
 def two_column_grid(parent, pairs):
