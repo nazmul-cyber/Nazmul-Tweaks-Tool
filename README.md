@@ -7,6 +7,29 @@ A beautiful, fast Windows optimization tool inspired by [Chris Titus WinUtil](ht
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6)
 ![Size](https://img.shields.io/badge/EXE-~19%20MB-teal)
 
+## Copy & Install (1 click on GitHub)
+
+On GitHub, each box below has a **copy button** (top-right corner of the code block). Click it, then paste.
+
+**Option A — One-line install** (PowerShell **Run as Administrator**):
+
+```powershell
+irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1 | iex
+```
+
+**Option B — Direct EXE download link** (paste in browser or share):
+
+```
+https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
+```
+
+| Link | URL |
+|------|-----|
+| Latest release page | https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest |
+| Repository | https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool |
+
+[![Download EXE](https://img.shields.io/badge/Download-EXE%20(~19%20MB)-0D9488?style=for-the-badge)](https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe)
+
 ## Features
 
 - **38+ Windows Tweaks** — Privacy, Performance, Explorer, Debloat, Updates, Network, Gaming
@@ -17,14 +40,6 @@ A beautiful, fast Windows optimization tool inspired by [Chris Titus WinUtil](ht
 - **6 Themes** — Light, Slate, Ocean, Midnight, Emerald, and more
 - **Fast Splash Screen** — Opens instantly, loads UI in background
 - **One-Line Install** — PowerShell command like WinUtil
-
-## Quick Install (PowerShell Admin)
-
-```powershell
-irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1 | iex
-```
-
-Copy → paste in **PowerShell (Admin)** → hit Enter → done.
 
 ## Manual Run
 
