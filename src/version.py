@@ -1,6 +1,6 @@
 """App version — bump when publishing a new GitHub release."""
 
-APP_VERSION = "1.0.15"
+APP_VERSION = "1.0.16"
 
 GITHUB_PROFILE = "https://github.com/nazmul-cyber"
 GITHUB_REPO = "https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool"

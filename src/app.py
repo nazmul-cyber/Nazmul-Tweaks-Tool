@@ -699,7 +699,7 @@ class NazmulApp(ctk.CTk):
         p.grid_rowconfigure(2, weight=1)
         self._header(
             p, "Tweak Back",
-            "Same tweaks you applied — check to revert, uncheck to keep.",
+            "All tweaks listed — check to revert, uncheck to keep.",
             [("Revert Checked", self._revert_checked_tweaks, "warning"),
              ("None", lambda: self._tweak_back_select(False), "secondary"),
              ("All", lambda: self._tweak_back_select(True), "secondary")],
@@ -728,42 +728,29 @@ class NazmulApp(ctk.CTk):
             w.destroy()
 
         applied = self._applied_tweak_ids()
-        if not applied:
-            ctk.CTkLabel(
-                self._tweak_back_scroll,
-                text="No tweaks applied yet.\n\nGo to Tweaks, select items, and click Apply first.",
-                font=FONT_BODY, text_color=self._t().text_muted, justify="left",
-            ).pack(anchor="w", pady=12)
-            return
-
-        items = [t for t in TWEAKS if t.id in applied]
-        if cat != "All":
-            items = [t for t in items if t.category == cat]
-
-        hist_map = {e["id"]: e for e in get_applied_tweak_history() if e.get("id")}
-        items.sort(
-            key=lambda t: hist_map.get(t.id, {}).get("last_applied", ""),
-            reverse=True,
-        )
+        items = TWEAKS if cat == "All" else [t for t in TWEAKS if t.category == cat]
 
         if not items:
             ctk.CTkLabel(
                 self._tweak_back_scroll,
-                text=f"No applied tweaks in category '{cat}'.",
+                text=f"No tweaks in category '{cat}'.",
                 font=FONT_BODY, text_color=self._t().text_muted,
             ).pack(anchor="w", pady=12)
             return
 
         for tweak in items:
             can_undo = tweak.id not in NO_UNDO_IDS and bool(get_undo_script(tweak.id))
-            self._tweak_back_row(self._tweak_back_scroll, tweak, can_undo)
+            was_applied = tweak.id in applied
+            self._tweak_back_row(self._tweak_back_scroll, tweak, can_undo, was_applied)
 
-    def _tweak_back_row(self, parent, tweak, can_undo: bool):
+    def _tweak_back_row(self, parent, tweak, can_undo: bool, was_applied: bool = False):
         t = self._t()
         row = ctk.CTkFrame(parent, fg_color=t.card, corner_radius=8,
                            border_width=1, border_color=t.card_border)
         row.pack(fill="x", pady=2)
         name = f"{tweak.icon} {tweak.name}"
+        if tweak.recommended:
+            name += "  *"
         if not can_undo:
             name += "  (manual only)"
         cb = ctk.CTkCheckBox(
@@ -772,7 +759,8 @@ class NazmulApp(ctk.CTk):
         )
         cb.pack(side="left", padx=12, pady=8)
         if can_undo:
-            cb.select()
+            if was_applied:
+                cb.select()
             self._tweak_back_checks[tweak.id] = cb
         else:
             cb.configure(state="disabled")

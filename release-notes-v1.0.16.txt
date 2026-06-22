@@ -1,0 +1,9 @@
+Tweak Back shows all tweaks + English-only GitHub description.
+
+**Tweak Back**
+- Full tweak list (same as Tweaks page) — not empty when no history
+- Check/uncheck any tweak to revert
+- Applied tweaks are pre-checked
+
+**GitHub**
+- Repo description: English only (Bengali removed)

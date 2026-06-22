@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest">v1.0.15</a>
+  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest">v1.0.16</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe">Download</a>
   &nbsp;·&nbsp;
