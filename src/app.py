@@ -456,7 +456,7 @@ class NazmulApp(ctk.CTk):
             r, c = divmod(i, 2)
             cell = ctk.CTkFrame(badge_box, fg_color="transparent")
             cell.grid(row=r, column=c, sticky="ew", padx=2, pady=2)
-            info_badge(cell, tag, val, t, command=cmd, accent=accent).pack(anchor="w")
+            info_badge(cell, tag, val, t, command=cmd, accent=accent)
 
         colored_btn(
             sb, "⬆ Check for Updates", self._check_updates, t, t.primary,

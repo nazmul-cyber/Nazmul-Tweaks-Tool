@@ -205,21 +205,19 @@ def primary_btn(parent, text, command, theme: Theme, color, width=120):
 
 
 def info_badge(parent, tag: str, value: str, theme: Theme, command=None, accent: str | None = None):
-    """Compact two-part badge button (README shield style)."""
+    """Compact two-part badge button (README shield style). Packs into parent."""
     wrap = ctk.CTkFrame(parent, fg_color="transparent")
-    tag_lbl = ctk.CTkLabel(
+    ctk.CTkLabel(
         wrap, text=tag, font=("Segoe UI", 9, "bold"), text_color="#FFFFFF",
         fg_color=theme.text_muted, corner_radius=6, width=58, height=22,
-    )
-    tag_lbl.pack(side="left")
+    ).pack(side="left")
     val_color = accent or theme.primary
-    val_lbl = ctk.CTkButton(
+    ctk.CTkButton(
         wrap, text=value, font=("Segoe UI", 9, "bold"), width=58, height=22,
         corner_radius=6, fg_color=val_color, hover_color=theme.primary_hover,
         text_color="#FFFFFF", command=command or (lambda: None),
-    )
-    val_lbl.pack(side="left", padx=(2, 0))
-    return wrap
+    ).pack(side="left", padx=(2, 0))
+    wrap.pack(anchor="w")
 
 
 def category_chips(parent, categories, variable, command, theme: Theme):
