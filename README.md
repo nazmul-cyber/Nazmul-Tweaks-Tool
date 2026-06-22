@@ -11,12 +11,20 @@ A beautiful, fast Windows optimization tool inspired by [Chris Titus WinUtil](ht
 
 On GitHub, each box below has a **copy button** (top-right corner of the code block). Click it, then paste.
 
-> **Important:** Use `iex (irm ...)` — **not** `irm ... | iex`. The pipe version fails on many PCs with *"empty string"* error.
+> **Do NOT use** `irm ... | iex` — it fails with *empty string* error (see screenshot issues).
 
-**Option A — One-line install** (PowerShell **Run as Administrator**):
+**Option A — Copy this** (PowerShell **Run as Administrator**):
 
 ```powershell
 iex (irm https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1)
+```
+
+**Wrong (broken):** ~~`irm ... | iex`~~
+
+**Option A2 — If Option A fails**, paste this instead:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex (irm 'https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/install.ps1')"
 ```
 
 **Option B — Direct EXE download link** (paste in browser or share):
