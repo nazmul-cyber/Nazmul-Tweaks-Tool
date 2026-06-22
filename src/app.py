@@ -31,16 +31,14 @@ from session_history import (
 from tweaks import get_undo_script, NO_UNDO_IDS
 from animations import animate_progress, fade_page, animate_card_hover, click_bounce
 from color_log import ColorLog
-from version import (
-    APP_VERSION, GITHUB_PROFILE, GITHUB_REPO, LICENSE_URL, EXE_SIZE_LABEL,
-)
+from version import APP_VERSION, GITHUB_PROFILE
 from updater import check_for_updates, download_update, launch_update, EXE_URL
 from ui_helpers import (
     make_scroll, secondary_btn, primary_btn, category_chips, colored_btn,
     get_install_command, get_install_script_path,
     get_refresh_script_path, get_install_command, setup_global_scroll, apply_theme_live,
     launch_elevated_ps1, launch_public_install, launch_update_script, launch_mas, launch_mas_action,
-    launch_elevated_tweak_scripts, sync_scroll_frame_width, info_badge,
+    launch_elevated_tweak_scripts, sync_scroll_frame_width,
 )
 
 ASSETS = get_assets()
@@ -54,9 +52,9 @@ class NazmulApp(ctk.CTk):
         self.geometry("1180x760")
         self.minsize(960, 640)
 
-        saved_theme = self._load_pref("theme", DEFAULT_THEME.name)
-        self._theme_name = saved_theme if saved_theme in THEMES else DEFAULT_THEME.name
-        self._theme = THEMES[self._theme_name]
+        self._theme_name = "light"
+        self._theme = THEMES["light"]
+        self._save_pref("theme", "light")
         self._checkboxes = {}
         self._nav_btns = {}
         self._pages = {}
@@ -428,40 +426,11 @@ class NazmulApp(ctk.CTk):
         self._resource_bar.pack(fill="x", padx=10, pady=(0, 6))
 
         theme_box = ctk.CTkFrame(sb, fg_color="transparent")
-        theme_box.pack(fill="x", padx=10, pady=(0, 6))
+        theme_box.pack(fill="x", padx=10, pady=(0, 8))
         ctk.CTkLabel(theme_box, text="Theme", font=FONT_SMALL,
-                     text_color=t.text_muted).pack(anchor="w", pady=(0, 3))
-        labels = [THEMES[k].label for k in THEME_ORDER if k in THEMES]
-        self._theme_menu = ctk.CTkOptionMenu(
-            theme_box, values=labels, command=self._on_theme_pick,
-            font=FONT_SMALL, height=30, corner_radius=8,
-            fg_color=t.card, button_color=t.primary, button_hover_color=t.primary_hover,
-            dropdown_fg_color=t.card, dropdown_hover_color=t.card_hover,
-            text_color=t.text,
-        )
-        self._theme_menu.pack(fill="x")
-        self._theme_menu.set(t.label)
-
-        badge_box = ctk.CTkFrame(sb, fg_color="transparent")
-        badge_box.pack(fill="x", padx=10, pady=(0, 6))
-        badge_box.grid_columnconfigure(0, weight=1)
-        badge_box.grid_columnconfigure(1, weight=1)
-        badges = [
-            ("RELEASE", f"v{APP_VERSION}", self._check_updates, t.primary),
-            ("DOWNLOAD", "EXE", lambda: self._open_url(f"{GITHUB_REPO}/releases/latest/download/Nazmul-Tweaks-Tool.exe"), t.success),
-            ("SIZE", EXE_SIZE_LABEL, lambda: self._toast(f"Portable EXE {EXE_SIZE_LABEL}", t.highlight), t.highlight),
-            ("LICENSE", "MIT", lambda: self._open_url(LICENSE_URL), t.accent),
-        ]
-        for i, (tag, val, cmd, accent) in enumerate(badges):
-            r, c = divmod(i, 2)
-            cell = ctk.CTkFrame(badge_box, fg_color="transparent")
-            cell.grid(row=r, column=c, sticky="ew", padx=2, pady=2)
-            info_badge(cell, tag, val, t, command=cmd, accent=accent)
-
-        colored_btn(
-            sb, "⬆ Check for Updates", self._check_updates, t, t.primary,
-            width=248, height=34,
-        ).pack(fill="x", padx=10, pady=(0, 6))
+                     text_color=t.text_muted).pack(anchor="w", pady=(0, 2))
+        ctk.CTkLabel(theme_box, text="Light", font=FONT_BODY,
+                     text_color=t.text).pack(anchor="w")
 
         admin_ok = is_admin()
         mode_txt = "Admin mode" if admin_ok else "Standard — UAC on Apply"
