@@ -75,7 +75,7 @@ class NazmulApp(ctk.CTk):
         self._applied_size = (0, 0)
         self._applied_wrap_w = 0
         self._stats_busy = False
-        self._github_avatar_img = None
+        self._github_icon_img = None
         self._sidebar_frame = None
 
         ctk.set_appearance_mode(self._theme.ctk_mode)
@@ -85,7 +85,6 @@ class NazmulApp(ctk.CTk):
         self._setup_boost_menu()
         self._show("home", animate=False)
         self.after(8000, self._check_updates_silent)
-        self.after(400, self._load_github_avatar)
 
     def _load_pref(self, key, default):
         try:
@@ -343,28 +342,14 @@ class NazmulApp(ctk.CTk):
         except Exception:
             self._toast("Could not open link", self._t().error)
 
-    def _load_github_avatar(self):
-        def worker():
-            cache = CONFIG_PATH.parent / "github-avatar.png"
-            try:
-                if not cache.exists() or cache.stat().st_size < 200:
-                    import urllib.request
-                    urllib.request.urlretrieve(f"{GITHUB_PROFILE}.png?size=64", cache)
-                self.after(0, lambda: self._apply_github_avatar(cache))
-            except Exception:
-                pass
-        threading.Thread(target=worker, daemon=True).start()
-
-    def _apply_github_avatar(self, path: Path):
-        if not getattr(self, "_github_btn", None):
-            return
+    def _github_mark_image(self, size: int = 18):
+        path = ASSETS / "github-mark.png"
+        if not path.exists():
+            return None
         try:
-            self._github_avatar_img = ctk.CTkImage(
-                light_image=str(path), dark_image=str(path), size=(30, 30),
-            )
-            self._github_btn.configure(image=self._github_avatar_img, text="")
+            return ctk.CTkImage(light_image=str(path), dark_image=str(path), size=(size, size))
         except Exception:
-            pass
+            return None
 
     def _build_sidebar(self):
         t = self._t()
@@ -387,10 +372,12 @@ class NazmulApp(ctk.CTk):
         tf.pack(side="left", fill="x", expand=True)
         ctk.CTkLabel(tf, text="Nazmul", font=("Segoe UI", 18, "bold"), text_color=t.primary).pack(anchor="w")
         ctk.CTkLabel(tf, text="Tweaks Tool", font=FONT_SMALL, text_color=t.text_muted).pack(anchor="w")
+        self._github_icon_img = self._github_mark_image(18)
         self._github_btn = ctk.CTkButton(
-            logo_frame, text="GH", width=34, height=34, corner_radius=17,
+            logo_frame, text="Support me ❤️!", width=128, height=30, corner_radius=8,
             fg_color=t.card, hover_color=t.card_hover,
             text_color=t.primary, font=FONT_SMALL,
+            image=self._github_icon_img, compound="left",
             command=lambda: self._open_url(GITHUB_PROFILE),
         )
         self._github_btn.pack(side="right", padx=(4, 0))
