@@ -1,0 +1,40 @@
+=== NAZMUL TWEAKS TOOL — LINKEDIN LAUNCH POST ===
+Image to attach: assets/nazmul-tweaks-tool.png (upload when creating post)
+
+=== POST TEXT (copy & paste) ===
+
+🚀 Just launched Nazmul Tweaks Tool v1.0.5 — a free Windows optimizer I built for everyone.
+
+Chris Titus WinUtil style: copy ONE line in PowerShell → app opens. No install wizard. No broken commands.
+
+✅ 38+ Windows tweaks (privacy, speed, debloat, gaming)
+✅ System Refresh — right-click desktop → GPU + RAM + Windows refresh (apps stay open)
+✅ 23 essential apps via winget
+✅ MAS activation center
+✅ PC Manager + 6 themes
+✅ Portable 19 MB EXE — Windows 10/11
+
+🔗 GitHub: https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool
+⬇️ Download EXE: https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
+🌐 Portfolio: https://portfolio-eight-red-48.vercel.app/projects.html
+
+One-line open (PowerShell):
+iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/open.ps1)
+
+Free & open source (MIT). Built because I wanted a simple tool that actually works for everyday Windows users.
+
+Feedback welcome — star the repo if it helps you! ⭐
+
+#Windows #OpenSource #PowerShell #SoftwareDevelopment #KUET #Entrepreneur #WebDeveloper #Windows11 #TechTools #FreeSoftware
+
+=== SHORT VERSION (if character limit) ===
+
+🚀 Nazmul Tweaks Tool v1.0.5 — free Windows optimizer.
+
+One PowerShell line → app opens (WinUtil style).
+38 tweaks · System Refresh · winget apps · MAS · 6 themes
+
+GitHub: https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool
+Download: https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
+
+#Windows #OpenSource #PowerShell #SoftwareDevelopment

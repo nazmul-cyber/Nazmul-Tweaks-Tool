@@ -25,6 +25,12 @@ First time: downloads ~19 MB to temp, then opens. Next time: opens faster (cache
 
 ## Or download EXE once
 
+<p align="center">
+  <a href="https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe">
+    <img src="assets/nazmul-tweaks-tool.png" alt="Nazmul Tweaks Tool" width="280">
+  </a>
+</p>
+
 https://github.com/nazmul-cyber/Nazmul-Tweaks-Tool/releases/latest/download/Nazmul-Tweaks-Tool.exe
 
 Double-click. No install wizard.
