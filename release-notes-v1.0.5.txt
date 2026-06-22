@@ -1,0 +1,13 @@
+WinUtil-style one-click open — no AppData folder, no 5-line install.
+
+**Open the app (paste in PowerShell):**
+```
+iex (iwr -useb https://raw.githubusercontent.com/nazmul-cyber/Nazmul-Tweaks-Tool/main/scripts/open.ps1)
+```
+
+- Downloads to TEMP (not LOCALAPPDATA) — fixes PermissionDenied errors
+- First run: downloads ~19 MB, then opens
+- Next runs: opens instantly from cache
+- Security popup "Unknown Publisher"? Click **Run** — normal for unsigned free software
+
+Or double-click the EXE in this release — no install wizard.
